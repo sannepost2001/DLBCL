@@ -1,0 +1,186 @@
+---
+title: "AllCasesCombined"
+author: "Sanne Post"
+date: "3/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("readxl")
+library(tidyr)
+library(dplyr)
+library(arsenal)
+library(knitr)
+library(VennDiagram)
+library(stringr)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+all_genenames <- read.delim("//home//sanne//bioinf//afstuderen//DATA//RUMC//CASES//DIAG//CASENAMES//AllCasesDIAG.csv", sep = ",")
+
+genes_cases <- all_genenames %>%
+  select(Gene.name, FILENAME)
+genesOrderd <- genes_cases %>% count(Gene.name, FILENAME)
+casesOrderd <- genes_cases %>% count(FILENAME, Gene.name)
+
+no_overlap <- subset(genesOrderd, Gene.name == "TP53"  | Gene.name == "MYD88" | Gene.name =="CD79B" | Gene.name =="KLHL6" | Gene.name =="TBL1XR1" | Gene.name =="BTG1" | Gene.name == "CARD11"| Gene.name == "PIM1" | Gene.name =="B2M" | Gene.name =="EBF1"| Gene.name =="CD58" | Gene.name =="KMT2D" | Gene.name =="IGLL5" |  Gene.name =="STAT3" | Gene.name =="BCL6" | Gene.name =="KRAS" | Gene.name == "TOX" | Gene.name == "PTPN6" |Gene.name == "CD83" | Gene.name == "NFKBIE" | Gene.name =="ZFP36L1" | Gene.name =="LTB" |  Gene.name =="PRKCB" | Gene.name =="SF3B1")
+
+#plot.ts(genes_cases)
+
+
+case1 <- subset(genesOrderd, FILENAME == "Case1_diag.csv")
+case19 <- subset(genesOrderd, FILENAME == "Case19_diag.csv")
+case2 <- subset(genesOrderd, FILENAME == "Case2_diag.csv")
+case3 <- subset(genesOrderd, FILENAME == "Case3_diag.csv")
+case30 <- subset(genesOrderd, FILENAME == "Case30_diag.csv")
+case32 <- subset(genesOrderd, FILENAME == "Case32_diag.csv")
+case6 <- subset(genesOrderd, FILENAME == "Case6_diag.csv")
+case8 <- subset(genesOrderd, FILENAME == "Case8_diag.csv")
+case47 <- subset(genesOrderd, FILENAME == "Case47_diag.csv")
+case51 <- subset(genesOrderd, FILENAME == "Case51_diag.csv")
+
+# Libraries
+library(ggplot2)
+# library(babynames) # provide the dataset: a dataframe called babynames
+library(dplyr)
+
+# Keep only 3 names
+don <- genesOrderd %>% 
+  filter(FILENAME %in% c("Case2_diag_casename.csv",  "Case32_diag_casename.csv",  "Case47_diag_casename.csv",  "Case6_diag_casename.csv", "Case1_diag_casename.csv",   "Case30_diag_casename.csv"  , "Case3_diag_casename.csv",   "Case51_diag_casename.csv" , "Case8_diag_casename.csv"))
+
+
+# library(ggplot2)
+#ggplot(top30, aes(x=Gene.name)) + geom_bar(aes(col=n))
+```
+
+## Including Plots
+```{r}
+ggplot(genesOrderd, aes(fill=FILENAME, y=n, x=Gene.name)) + 
+  geom_bar(position="stack", stat="identity") +
+  geom_line() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Found more than 4 times")+
+  scale_y_continuous(n.breaks=10)
+
+
+```
+
+```{r}
+geneBig4 <- subset(genesOrderd, n >=4)
+
+genesOrderd %>%
+  ggplot( aes(x=Gene.name, y=n, group=FILENAME, color=FILENAME)) +
+  geom_line() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Found more than 4 times")
+
+#top30 <- subset(genesOrderd, n > 3)
+library(ggplot2)
+
+ggplot(geneBig4, aes(fill=FILENAME, y=n, x=Gene.name)) + 
+  geom_bar(position="stack", stat="identity") +
+  geom_line() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Found more than 4 times")+
+  scale_y_continuous(n.breaks=10)
+
+ggplot(geneBig4, aes(fill=Gene.name, y=n, x=FILENAME)) + 
+  geom_bar(position="stack", stat="identity") +
+  geom_line() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Found more than 4 times")+
+  scale_y_continuous(n.breaks=10)
+
+ggplot(genesOrderd, aes(fill=FILENAME, y=n, x=Gene.name)) + 
+  geom_bar(position="stack", stat="identity") +
+  geom_line() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("Found more than 4 times")+
+  scale_y_continuous(n.breaks=10)
+
+
+```
+
+```{r}
+library(ggplot2)
+
+no_overlap %>%
+  ggplot( aes(x=Gene.name, y=n, group=FILENAME, color=FILENAME)) +
+  geom_line() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  ggtitle("No Overlap")
+
+ggplot(no_overlap, aes(fill=FILENAME, y=n, x=Gene.name)) + 
+  geom_bar(position="stack", stat="identity") +
+  geom_line() +theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  ggtitle("No Overlap")+
+  scale_y_continuous(n.breaks=10)
+```
+
+```{r pressure, echo=FALSE}
+library(ggplot2)
+ library(dplyr)
+case1 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  ggtitle("Case1_diag")
+
+case19 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +ggtitle("Case19_diag")
+
+case2 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +ggtitle("Case2_diag")
+case30 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+ggtitle("Case30_diag")
+case32 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+ggtitle("Case32_diag")
+case3 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+ggtitle("Case3_diag")
+
+case47 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +ggtitle("Case47_diag")
+case51 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +ggtitle("Case51_diag")
+case6 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +ggtitle("Case6_diag")
+case8 %>% 
+  arrange(desc(n)) %>% 
+    slice(1:30) %>%
+    ggplot(., aes(x=Gene.name, y=n))+
+              geom_bar(stat='identity') +
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+ggtitle("Case8_diag")
+```
+

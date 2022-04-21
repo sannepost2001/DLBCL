@@ -1,0 +1,84 @@
+---
+title: "DIAGvsRELAPSE"
+author: "Sanne Post"
+date: "3/8/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("readxl")
+library(tidyr)
+library(dplyr)
+library(arsenal)
+library(knitr)
+library(VennDiagram)
+library(stringr)
+library("writexl")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Diag en relapse inlezen
+
+```{r}
+genesOrderdDiag <- read.delim("//home//sanne//bioinf//afstuderen//DATA//7MARCH/diagnosis//genesOrderdPercent.csv", sep = ",")
+genesOrderdRelapse <- read.delim("//home//sanne//bioinf//afstuderen//DATA//7MARCH/r1//genesOrderdPercent.csv", sep = ",")
+
+top20_diag <- head(arrange(genesOrderdDiag, desc(percentage)), n = 20)
+top20_relapse <- head(arrange(genesOrderdRelapse, desc(percentage)), n = 20)
+
+```
+
+## IN DIAG NIET IN R1
+```{r}
+R1_DIAG <- generics::setdiff(genesOrderdDiag$gene, genesOrderdRelapse$gene)  # Apply
+R1_DIAG
+
+In_Diag_not_Relapse <- genesOrderdDiag %>% filter_all(any_vars(. %in% R1_DIAG))
+```
+## IN R1 NIET IN DIAG
+```{r}
+DIAG_R1 <- generics::setdiff(genesOrderdRelapse$gene, genesOrderdDiag$gene)  # Apply
+DIAG_R1
+
+In_Relapse_not_Diag <- genesOrderdRelapse %>% filter_all(any_vars(. %in% DIAG_R1))
+```
+## Schmitz vs chapuy
+```{r}
+Schmitz <- read.delim("//home//sanne//bioinf//afstuderen//DATA//Schmitz//GeneticPredictors.csv", header = TRUE)
+chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
+SchmitzChapuy <- generics::intersect(Schmitz$Gene.symbol, chapuy_CCG$gene)  # Apply intersect function
+#SchmitzChapuy
+Schmitz_Chapuy_genes_overlap <- Schmitz %>% filter_all(any_vars(. %in% SchmitzChapuy))
+Chapuy_Schmitz_genes_overlap <- chapuy_CCG %>% filter_all(any_vars(. %in% SchmitzChapuy))
+
+```
+
+## CHAPUY all vs RUMC ALL
+```{r}
+all_genenames<- read.delim("//home//sanne//bioinf//afstuderen//DATA//ALL//AllCases.csv", sep = ",")
+chapuy_all <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//table3_A_chapuy.csv", skip = 2, header = FALSE)
+#data <- read.table("data.txt", skip = 2, header = FALSE)
+#unique(chapuy)
+
+newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
+colnames(chapuy_all) <- newheaders
+
+totalRUMC <- rbind(genesOrderdDiag, genesOrderdRelapse) 
+
+chapuyRUMCALL <- generics::setdiff(all_genenames$Gene.name, chapuy_all$gene)  # Apply intersect function
+chapuyRUMCALL
+
+chapuyRUMCALL_data <- totalRUMC %>% filter_all(any_vars(. %in% chapuyRUMCALL))
+
+```
+
+## Write
+```{r}
+write_xlsx(In_Relapse_not_Diag,"//home//sanne//bioinf//afstuderen//ANALYSIS//LITvsDATA//InR1NotDiag.xlsx")
+write_xlsx(In_Diag_not_Relapse,"//home//sanne//bioinf//afstuderen//ANALYSIS//LITvsDATA//InDiagNotR1.xlsx")
+write_xlsx(Schmitz_Chapuy_genes_overlap,"//home//sanne//bioinf//afstuderen//ANALYSIS//LITvsDATA//CHAPUYvsSCHMITZ_SCHMITZdata.xlsx")
+write_xlsx(Chapuy_Schmitz_genes_overlap,"//home//sanne//bioinf//afstuderen//ANALYSIS//LITvsDATA//CHAPUYvsSCHMITZ_CHAPUYdata.xlsx")
+write_xlsx(chapuyRUMCALL_data,"//home//sanne//bioinf//afstuderen//ANALYSIS//LITvsDATA//InRUMCNotCHAPUY.xlsx")
+
+```
+

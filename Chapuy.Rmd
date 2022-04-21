@@ -1,0 +1,34 @@
+---
+title: "Chapuy"
+author: "Sanne Post"
+date: "2/24/2022"
+output: html_document
+---
+
+# gene names
+## Diagnose
+
+```{r}
+#genenames <- Case1_diag %>% select("Gene name")
+#genenames <- read.table("/home//sanne//bioinf//afstuderen//DATA//diag_GeneNames.csv", header = TRUE)
+genenames <- read.delim("//home//sanne//bioinf//afstuderen//DATA//RUMC//diag_GeneNames.csv")
+#unique(genenames)
+#table(genenames['Gene.name'])
+genesOrderd <- genenames %>% count(Gene.name)
+genesOrderd <- genesOrderd %>% arrange(desc(n))
+class(genesOrderd)
+library(ggplot2)
+library(dplyr)
+ggplot(genesOrderd, aes(x=Gene.name, y=n))+
+  scale_x_discrete(guide = guide_axis(n.dodge = 5)) +
+              geom_bar(stat='identity')
+```
+
+## RUMC vs. Chapuy
+```{r}
+chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
+
+chapuyRUMC <- generics::intersect(chapuy_CCG$gene, genesOrderd$Gene.name)  # Apply intersect function
+chapuyRUMC
+
+chapuy_RUMC_genes_overlap <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC))

@@ -1,0 +1,369 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+library("readxl")
+library(tidyr)
+library(dplyr)
+library(arsenal)
+library(knitr)
+library(VennDiagram)
+library(stringr)
+library("writexl")
+knitr::opts_chunk$set(echo = TRUE)
+library(xlsx)
+```
+
+## write excel
+```{r}
+write.xlsx.custom <- function(x, file, sheetName="Sheet1",
+                       col.names=TRUE, row.names=TRUE, append=FALSE, showNA=TRUE)
+{
+    if (!is.data.frame(x))
+        x <- data.frame(x)    # just because the error message is too ugly
+
+    iOffset <- jOffset <- 0
+    if (col.names)
+        iOffset <- 1
+    if (row.names)
+        jOffset <- 1
+
+    if (append && file.exists(file)){
+        wb <- loadWorkbook(file)
+    } else {
+        ext <- gsub(".*\\.(.*)$", "\\1", basename(file))
+        wb  <- createWorkbook(type=ext)
+    }  
+    sheet <- createSheet(wb, sheetName)
+
+    noRows <- nrow(x) + iOffset
+    noCols <- ncol(x) + jOffset
+    if (col.names){
+        rows  <- createRow(sheet, 1)                  # create top row
+        cells <- createCell(rows, colIndex=1:noCols)  # create cells
+        mapply(setCellValue, cells[1,(1+jOffset):noCols], colnames(x))
+    }
+    if (row.names)             # add rownames to data x                   
+        x <- cbind(rownames=rownames(x), x)
+
+    if(nrow(x) > 0) {
+        colIndex <- seq_len(ncol(x))
+        rowIndex <- seq_len(nrow(x)) + iOffset
+
+        .write_block(wb, sheet, x, rowIndex, colIndex, showNA)
+    }
+    saveWorkbook(wb, file)
+
+    invisible()
+}
+
+.write_block <- function(wb, sheet, y, rowIndex=seq_len(nrow(y)),
+   colIndex=seq_len(ncol(y)), showNA=TRUE)
+{
+  rows  <- createRow(sheet, rowIndex)      # create rows
+  cells <- createCell(rows, colIndex)      # create cells
+
+  for (ic in seq_len(ncol(y)))
+    mapply(setCellValue, cells[seq_len(nrow(cells)), colIndex[ic]], y[,ic], FALSE, showNA)
+
+  # Date and POSIXct classes need to be formatted
+  indDT <- which(sapply(y, function(x) inherits(x, "Date")))
+  if (length(indDT) > 0) {
+    dateFormat <- CellStyle(wb) + DataFormat(getOption("xlsx.date.format"))
+    for (ic in indDT){
+      lapply(cells[seq_len(nrow(cells)),colIndex[ic]], setCellStyle, dateFormat)
+    }
+  }
+
+  indDT <- which(sapply(y, function(x) inherits(x, "POSIXct")))
+  if (length(indDT) > 0) {
+    datetimeFormat <- CellStyle(wb) + DataFormat(getOption("xlsx.datetime.format"))
+    for (ic in indDT){
+      lapply(cells[seq_len(nrow(cells)),colIndex[ic]], setCellStyle, datetimeFormat)
+    }
+  }
+
+}
+
+```
+
+## read excel
+```{r}
+library(readxl)
+read_excel_allsheets <- function(filename, tibble = FALSE) {
+  # I prefer straight data.frames
+  # but if you like tidyverse tibbles (the default with read_excel)
+  # then just pass tibble = TRUE
+  sheets <- readxl::excel_sheets(filename)
+  x <-
+    lapply(sheets, function(X)
+      readxl::read_excel(filename, sheet = X))
+  if (!tibble)
+    x <- lapply(x, as.data.frame)
+  names(x) <- sheets
+  x
+}
+
+
+
+GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
+  DF_SELECTED <- DF_LIST[[ITEM_LOC]]
+  DF_SELECTED <- tbl_df(DF_SELECTED)
+  return(DF_SELECTED)
+}
+
+```
+
+## dynamiek
+```{r}
+dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location) {
+  newheaders <-
+    c("AFrelapse",
+      "AFdiag" ,
+      "Gene.name",
+      "Start.position",
+      "CASE")
+  
+  colnames(AF_diag) <- newheaders
+  colnames(AF_r1) <- newheaders
+  AF_diag[is.na(AF_diag)] <- 0
+  AF_r1[is.na(AF_r1)] <- 0
+  #paste0("\\1", string)
+  caseDiag <- toString(paste0(Case , "_diag"))
+  caseR1 <- toString(paste0(Case , "_r1"))
+  AF_diag$CASE <- caseDiag
+  AF_r1$CASE <- caseR1
+  
+  times2 = data.frame(matrix(ncol = 5, nrow = 0))
+  colnames(times2) <- newheaders
+  devides2 = data.frame(matrix(ncol = 5, nrow = 0))
+  colnames(devides2) <- newheaders
+  between2 = data.frame(matrix(ncol = 5, nrow = 0))
+  colnames(between2) <- newheaders
+  RECIDIEF_specifiek = data.frame(matrix(ncol = 5, nrow = 0))
+  colnames(RECIDIEF_specifiek) <- newheaders
+  RECIDIEF_verrijkt = data.frame(matrix(ncol = 5, nrow = 0))
+  colnames(RECIDIEF_verrijkt) <- newheaders
+
+  
+  for (i in 1:nrow(AF_r1)) {
+    row <- AF_r1[i,]
+    AFdiagscore <- row$AFdiag
+    AFrelapsescore <- row$AFrelapse
+    AFdiagtime2 <- AFdiagscore * 2
+    RECIDIEF_specifiek_row = data.frame()
+    RECIDIEF_verrijkt_row = data.frame()
+    
+    if (AFdiagscore == 0) {
+      RECIDIEF_specifiek_row <- data.frame(row)
+      print("relapse specifiek")
+      
+    }
+    else if (AFdiagtime2 < AFrelapsescore) {
+      print("times 2 relapse")
+      #AF_Case1_diag$dynamiek <- "times 2"
+      #(row)
+      RECIDIEF_verrijkt_row <- data.frame(row)
+    }
+    RECIDIEF_specifiek <-
+      rbind(RECIDIEF_specifiek, RECIDIEF_specifiek_row)
+    RECIDIEF_verrijkt <-
+      rbind(RECIDIEF_verrijkt, RECIDIEF_verrijkt_row)
+    
+  }
+  # return(RECIDIEF_specifiek, RECIDIEF_verrijkt)
+  for (i in 1:nrow(AF_diag)) {
+    row <- AF_diag[i, ]
+    AFdiagscore <- row$AFdiag
+    AFrelapsescore <- row$AFrelapse
+    AFdiagtime2 <- AFdiagscore * 2
+    AFdiagdevide2 <- AFdiagscore / 2
+    times2_row = data.frame()
+    devides2_row = data.frame()
+    between_row = data.frame()
+    
+    if (AFdiagtime2 < AFrelapsescore) {
+      print("times 2")
+      #AF_Case1_diag$dynamiek <- "times 2"
+      #(row)
+      times2_row <- data.frame(row)
+    }
+    else if (AFdiagdevide2 > AFrelapsescore) {
+      print("devide 2")
+      #AF_Case1_diag$dynamiek <- "times 2"
+      #(row)
+      devides2_row <- data.frame(row)
+    }
+    else{
+      #AF_Case1_diag$dynamiek <- "devide 2"
+      print("between devide and times")
+      between_row <- data.frame(row)
+      
+    }
+    times2 <- rbind(times2, times2_row)
+    devides2 <- rbind(devides2, devides2_row)
+    between2 <- rbind(between2, between_row)
+  }
+  
+  filenames <-
+    paste0(OUTPUT_location, Case, "v3.xlsx")
+  
+  write.xlsx.custom(RECIDIEF_specifiek, file = filenames, sheetName = 
+               "RECIDIEF_specifiek", append = FALSE, row.names = FALSE)
+  
+  write.xlsx.custom(RECIDIEF_verrijkt, file = filenames, sheetName = 
+               "RECIDIEF_verrijkt", append = TRUE,row.names = FALSE)
+ 
+  write.xlsx.custom(times2, file = filenames, sheetName = "DIAGNOSE_verrijkt", 
+             append = TRUE, row.names = FALSE)
+  
+  write.xlsx.custom(devides2, file = filenames, sheetName = "DIAGNOSE_afgenomen",
+             append = TRUE, row.names = FALSE)
+  
+  write.xlsx.custom(between2, file = filenames, sheetName = "DIAGNOSE_behouden",
+             append = TRUE, row.names = FALSE)
+}
+
+```
+
+## locations
+```{r}
+EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx"
+OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//DYNAMIEK//"
+mysheets <-
+  read_excel_allsheets(EXCEL_location)
+```
+
+## case 1
+```{r}
+Case1_diag <- GETDF_FROMLIST(mysheets, "Case1_Diag")
+Case1_r1 <- GETDF_FROMLIST(mysheets, "Case1_R1")
+
+AF_Case1_diag <- Case1_diag %>%
+  select(AF_tumor_1B, AF_tumor_1A, `Gene name`, `Start position`)
+AF_Case1_r1 <- Case1_r1 %>%
+  select(AF_tumor_1B, AF_tumor_1A, `Gene name`, `Start position`)
+
+Case <- "Case1"
+dynamiek_calculations(AF_Case1_diag, AF_Case1_r1, Case, OUTPUT_location)
+```
+
+## case 2
+```{r}
+Case2_diag <- GETDF_FROMLIST(mysheets, "Case2_Diag")
+Case2_r1 <- GETDF_FROMLIST(mysheets, "Case2_R1")
+
+AF_Case2_diag <- Case2_diag %>%
+  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+AF_Case2_r1 <- Case2_r1 %>%
+  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+
+Case <- "Case2"
+dynamiek_calculations(AF_Case2_diag, AF_Case2_r1, Case, OUTPUT_location)
+```
+
+## case 3
+```{r}
+Case3_diag <- GETDF_FROMLIST(mysheets, "Case3_Diag")
+Case3_r1 <- GETDF_FROMLIST(mysheets, "Case3_R1")
+
+AF_Case3_diag <- Case3_diag %>%
+  select(AF_tumor_3B, AF_tumor_3A, `Gene name`, `Start position`)
+AF_Case3_r1 <- Case3_r1 %>%
+  select(AF_tumor_3B, AF_tumor_3A, `Gene name`, `Start position`)
+Case <- "Case3"
+dynamiek_calculations(AF_Case3_diag, AF_Case3_r1, Case, OUTPUT_location)
+```
+
+## case 19
+```{r}
+Case19_diag <- GETDF_FROMLIST(mysheets, "Case19_Diag")
+Case19_r1 <- GETDF_FROMLIST(mysheets, "Case19_R1")
+
+AF_Case19_diag <- Case19_diag %>%
+  select(AF_tumor_19B, AF_tumor_19A, `Gene name`, `Start position`)
+AF_Case19_r1 <- Case19_r1 %>%
+  select(AF_tumor_19B, AF_tumor_19A, `Gene name`, `Start position`)
+Case <- "Case19"
+dynamiek_calculations(AF_Case19_diag, AF_Case19_r1, Case, OUTPUT_location)
+```
+
+## case 30
+```{r}
+Case30_diag <- GETDF_FROMLIST(mysheets, "Case30_Diag")
+Case30_r1 <- GETDF_FROMLIST(mysheets, "Case30_R1")
+
+AF_Case30_diag <- Case30_diag %>%
+  select(AF_Relapse1...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+AF_Case30_r1 <- Case30_r1 %>%
+  select(AF_Relapse1...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+Case <- "Case30"
+dynamiek_calculations(AF_Case30_diag, AF_Case30_r1, Case, OUTPUT_location)
+```
+
+## case 32
+```{r}
+Case32_diag <- GETDF_FROMLIST(mysheets, "Case32_Diag")
+Case32_r1 <- GETDF_FROMLIST(mysheets, "Case32_R1")
+
+AF_Case32_diag <- Case32_diag %>%
+  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+AF_Case32_r1 <- Case32_r1 %>%
+  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+Case <- "Case32"
+dynamiek_calculations(AF_Case32_diag, AF_Case32_r1, Case, OUTPUT_location)
+```
+
+## case 47
+```{r}
+Case47_diag <- GETDF_FROMLIST(mysheets, "Case47_Diag")
+Case47_r1 <- GETDF_FROMLIST(mysheets, "Case47_R1")
+
+AF_Case47_diag <- Case47_diag %>%
+  select(AF_tumor_47B, AF_tumor_47A, `Gene name`, `Start position`)
+AF_Case47_r1 <- Case47_r1 %>%
+  select(AF_tumor_47B, AF_tumor_47A, `Gene name`, `Start position`)
+Case <- "Case47"
+dynamiek_calculations(AF_Case47_diag, AF_Case47_r1, Case, OUTPUT_location)
+```
+
+## case 51
+```{r}
+Case51_diag <- GETDF_FROMLIST(mysheets, "Case51_Diag")
+Case51_r1 <- GETDF_FROMLIST(mysheets, "Case51_R1")
+
+AF_Case51_diag <- Case51_diag %>%
+  select(AF_tumor_51B, AF_tumor_51A, `Gene name`, `Start position`)
+AF_Case51_r1 <- Case51_r1 %>%
+  select(AF_tumor_51B, AF_tumor_51A, `Gene name`, `Start position`)
+Case <- "Case51"
+dynamiek_calculations(AF_Case51_diag, AF_Case51_r1, Case, OUTPUT_location)
+```
+
+## case 6
+```{r}
+Case6_diag <- GETDF_FROMLIST(mysheets, "Case6_Diag")
+Case6_r1 <- GETDF_FROMLIST(mysheets, "Case6_R1")
+
+AF_Case6_diag <- Case6_diag %>%
+  select(AF_tumor_6D, AF_tumor_6A, `Gene name`, `Start position`)
+AF_Case6_r1 <- Case6_r1 %>%
+  select(AF_tumor_6D, AF_tumor_6A, `Gene name`, `Start position`)
+Case <- "Case6"
+dynamiek_calculations(AF_Case6_diag, AF_Case6_r1, Case, OUTPUT_location)
+```
+
+## case 8
+```{r}
+Case8_diag <- GETDF_FROMLIST(mysheets, "Case8_Diag")
+Case8_r1 <- GETDF_FROMLIST(mysheets, "Case8_R1")
+
+AF_Case8_diag <- Case8_diag %>%
+  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`)
+AF_Case8_r1 <- Case8_r1 %>%
+  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`)
+Case <- "Case8"
+dynamiek_calculations(AF_Case8_diag, AF_Case8_r1, Case, OUTPUT_location)
+```

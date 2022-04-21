@@ -1,0 +1,132 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+library("readxl")
+library(tidyr)
+library(dplyr)
+library(arsenal)
+library(knitr)
+library(VennDiagram)
+library(stringr)
+library("writexl")
+knitr::opts_chunk$set(echo = TRUE)
+library(xlsx)
+# library(dtutils)
+```
+
+## read excel
+```{r}
+library(readxl)
+read_excel_allsheets <- function(filename, tibble = FALSE) {
+  # I prefer straight data.frames
+  # but if you like tidyverse tibbles (the default with read_excel)
+  # then just pass tibble = TRUE
+  sheets <- readxl::excel_sheets(filename)
+  x <-
+    lapply(sheets, function(X)
+      readxl::read_excel(filename, sheet = X))
+  if (!tibble)
+    x <- lapply(x, as.data.frame)
+  names(x) <- sheets
+  x
+}
+
+GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
+  DF_SELECTED <- DF_LIST[[ITEM_LOC]]
+  DF_SELECTED <- tibble::as_tibble(DF_SELECTED)
+  return(DF_SELECTED)
+}
+
+```
+
+## locations
+```{r}
+EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx"
+OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//DYNAMIEK//lollipops//"
+mysheets <-
+  read_excel_allsheets(EXCEL_location)
+```
+
+## Lollipop code
+```{r}
+lollipop_function <- function(Gene_name, mysheets, OUTPUT_location) {
+  Gene_name_allsheets = data.frame()
+  for (i in 1:length(mysheets)) {
+    # print(i)
+    Gene_name_allsheets_row = data.frame()
+    sheet <- GETDF_FROMLIST(mysheets, i)
+    Gene_name_allsheets_row <-
+      subset(sheet , `Gene name` == Gene_name)
+    # print(Gene_name_allsheets_row)
+    Gene_name_allsheets_row <- Gene_name_allsheets_row %>%
+      select(Chromosome, `Start position`, `End position`,
+           Reference, Variant, `Gene name`)
+    Gene_name_allsheets <-
+      rbind(Gene_name_allsheets, Gene_name_allsheets_row)
+    # print(Gene_name_allsheets)
+  }
+  # return(sheet)
+  lollipop_data <- Gene_name_allsheets %>%
+    select(Chromosome, `Start position`, `End position`,
+           Reference, Variant, `Gene name`)
+  newheaders <-
+    c("Chromosome",
+      "Start_Position" ,
+      "End_Position",
+      "Reference_Allele",
+      "Variant_Allele",
+      "Hugo_Symbol")
+  filenames <-
+    paste0(OUTPUT_location, "lollipop_data_dynamisch_", Gene_name, ".txt")
+  colnames(lollipop_data) <- newheaders
+  write.table(lollipop_data, filenames, na = "NA", sep = "\t", 
+              row.names = FALSE, quote = FALSE)
+  return(lollipop_data)
+}
+
+```
+
+## dynamische genen
+```{r}
+lollipop_myc <- lollipop_function("MYC", mysheets, OUTPUT_location)
+lollipop_BTG1 <- lollipop_function("BTG1", mysheets, OUTPUT_location)
+lollipop_MUC4 <- lollipop_function("MUC4", mysheets, OUTPUT_location)
+lollipop_MYD88 <- lollipop_function("MYD88", mysheets, OUTPUT_location)
+lollipop_PIM1 <- lollipop_function("PIM1", mysheets, OUTPUT_location)
+```
+
+## verrijkte genen
+```{r}
+lollipop_BTG1 <- lollipop_function("BTG1", mysheets, OUTPUT_location)
+lollipop_CD58 <- lollipop_function("CD58", mysheets, OUTPUT_location)
+lollipop_DDX3X <- lollipop_function("DDX3X", mysheets, OUTPUT_location)
+lollipop_DTX1 <- lollipop_function("DTX1", mysheets, OUTPUT_location)
+lollipop_H14 <- lollipop_function("H1-4", mysheets, OUTPUT_location)
+lollipop_H15 <- lollipop_function("H1-5", mysheets, OUTPUT_location)
+lollipop_IRF2BP2 <- lollipop_function("IRF2BP2", mysheets, OUTPUT_location)
+lollipop_LRP1B <- lollipop_function("LRP1B", mysheets, OUTPUT_location)
+lollipop_MUC4 <- lollipop_function("MUC4", mysheets, OUTPUT_location)
+lollipop_MYC <- lollipop_function("MYC", mysheets, OUTPUT_location)
+lollipop_NFKB2 <- lollipop_function("NFKB2", mysheets, OUTPUT_location)
+lollipop_PIM1 <- lollipop_function("PIM1", mysheets, OUTPUT_location)
+lollipop_SORCS3 <- lollipop_function("SORCS3", mysheets, OUTPUT_location)
+lollipop_SPEN <- lollipop_function("SPEN", mysheets, OUTPUT_location)
+lollipop_ZC3H12A <- lollipop_function("ZC3H12A", mysheets, OUTPUT_location)
+```
+
+## behouden genen
+```{r}
+lollipop_TEX13D <- lollipop_function("TEX13D", mysheets, OUTPUT_location)
+lollipop_SSU72P3 <- lollipop_function("SSU72P3", mysheets, OUTPUT_location)
+lollipop_SPEM3 <- lollipop_function("SPEM3", mysheets, OUTPUT_location)
+lollipop_SMIM5 <- lollipop_function("SMIM5", mysheets, OUTPUT_location)
+lollipop_MUC12 <- lollipop_function("MUC12", mysheets, OUTPUT_location)
+lollipop_ANAPC1 <- lollipop_function("ANAPC1", mysheets, OUTPUT_location)
+lollipop_C2orf16 <- lollipop_function("C2orf16", mysheets, OUTPUT_location)
+lollipop_GIPC3 <- lollipop_function("GIPC3", mysheets, OUTPUT_location)
+lollipop_MYC <- lollipop_function("MYC", mysheets, OUTPUT_location)
+lollipop_PIM1 <- lollipop_function("PIM1", mysheets, OUTPUT_location)
+```

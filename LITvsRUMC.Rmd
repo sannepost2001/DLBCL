@@ -1,0 +1,251 @@
+---
+title: "DLBCL madeleine data"
+author: "Sanne Post"
+date: "3/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library("readxl")
+library(tidyr)
+library(dplyr)
+library(arsenal)
+library(knitr)
+library(VennDiagram)
+library(stringr)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## load in data
+
+```{r}
+# Case1_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 1)
+# Case2_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 2)
+# Case3_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 3)
+# Case6_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 4)
+# Case8_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 5)
+# Case19_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 6)
+# Case30_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 7)
+# Case32_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 8)
+# Case47_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 9)
+# Case51_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 10)
+# 
+# Case1_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 11)
+# Case2_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 12)
+# Case3_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 13)
+# Case6_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 14)
+# Case8_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 15)
+# Case19_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 16)
+# Case30_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 17)
+# Case32_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 18)
+# Case47_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 19)
+# Case51_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 20)
+
+# genenames <- Case1_diag %>% select("Gene name")
+```
+
+## write csv
+
+```{r}
+# # write.csv(Case1_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case1_diag.csv" ,row.names = FALSE)
+# write.csv(Case1_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case1_diag.csv" ,row.names = FALSE)
+# write.csv(Case1_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case1_r1.csv" ,row.names = FALSE)
+# write.csv(Case19_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case19_diag.csv" ,row.names = FALSE)
+# write.csv(Case19_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case19_r1.csv" ,row.names = FALSE)
+# write.csv(Case2_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case2_diag.csv" ,row.names = FALSE)
+# write.csv(Case2_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case2_r1.csv" ,row.names = FALSE)
+# write.csv(Case3_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case3_diag.csv" ,row.names = FALSE)
+# write.csv(Case3_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case3_r1.csv" ,row.names = FALSE)
+# write.csv(Case30_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case30_diag.csv" ,row.names = FALSE)
+# write.csv(Case30_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case30_r1.csv" ,row.names = FALSE)
+# write.csv(Case32_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case32_diag.csv" ,row.names = FALSE)
+# write.csv(Case32_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case32_r1.csv" ,row.names = FALSE)
+# write.csv(Case47_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case47_diag.csv" ,row.names = FALSE)
+# write.csv(Case47_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case47_r1.csv" ,row.names = FALSE)
+# write.csv(Case51_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case51_diag.csv" ,row.names = FALSE)
+# write.csv(Case51_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case51_r1.csv" ,row.names = FALSE)
+# 
+# write.csv(Case6_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case6_diag.csv" ,row.names = FALSE)
+# write.csv(Case6_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case6_r1.csv" ,row.names = FALSE)
+# write.csv(Case8_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case8_diag.csv" ,row.names = FALSE)
+# write.csv(Case8_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case8_r1.csv" ,row.names = FALSE)
+# 
+
+```
+
+# gene names
+## Diagnose
+
+```{r}
+#genenames <- Case1_diag %>% select("Gene name")
+#genenames <- read.table("/home//sanne//bioinf//afstuderen//DATA//diag_GeneNames.csv", header = TRUE)
+genenames <- read.delim("//home//sanne//bioinf//afstuderen//DATA//RUMC//diag_GeneNames.csv")
+#unique(genenames)
+#table(genenames['Gene.name'])
+genesOrderd <- genenames %>% count(Gene.name)
+genesOrderd <- genesOrderd %>% arrange(desc(n))
+class(genesOrderd)
+library(ggplot2)
+library(dplyr)
+ggplot(genesOrderd, aes(x=Gene.name, y=n))+
+  scale_x_discrete(guide = guide_axis(n.dodge = 5)) +
+              geom_bar(stat='identity')
+```
+## chapuy
+```{r}
+chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//NIHMS1030203-supplement-Table_S3.csv", skip = 2, header = FALSE)
+#data <- read.table("data.txt", skip = 2, header = FALSE)
+#unique(chapuy)
+
+newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
+colnames(chapuy) <- newheaders
+
+chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
+
+chapuyRUMC <- generics::intersect(chapuy_CCG$gene, genesOrderd$Gene.name)  # Apply intersect function
+chapuyRUMC
+
+chapuy_RUMC_genes_overlap <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC))
+
+```
+
+```{r}
+Schmitz <- read.delim("//home//sanne//bioinf//afstuderen//DATA//Schmitz//GeneticPredictors.csv", header = TRUE)
+#data <- read.table("data.txt", skip = 2, header = FALSE)
+#unique(Schmitz)
+SchmitzRUMC <- generics::intersect(Schmitz$Gene.symbol, genesOrderd$Gene.name)  # Apply intersect function
+SchmitzRUMC
+
+Schmitz_RUMC_genes_overlap <- Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC))
+```
+
+```{r}
+SchmitzChapuy <- generics::intersect(Schmitz$Gene.symbol, chapuy_CCG$gene)  # Apply intersect function
+#SchmitzChapuy
+Schmitz_Chapuy_genes_overlap <- Schmitz %>% filter_all(any_vars(. %in% SchmitzChapuy))
+Chapuy_Schmitz_genes_overlap <- chapuy_CCG %>% filter_all(any_vars(. %in% SchmitzChapuy))
+
+```
+
+# Diagnose and relapse
+
+```{r}
+#genenames <- Case1_diag %>% select("Gene name")
+#genenames <- read.table("/home//sanne//bioinf//afstuderen//DATA//diag_GeneNames.csv", header = TRUE)
+genenames_all <- read.delim("//home//sanne//bioinf//afstuderen//DATA//RUMC//all_GeneNames.csv")
+#unique(genenames_all)
+#table(genenames['Gene.name'])
+genesOrderd_all <- genenames_all %>% count(Gene.name)
+genesOrderd_all <- genesOrderd_all %>% arrange(desc(n))
+class(genesOrderd_all)
+library(ggplot2)
+library(dplyr)
+ggplot(genesOrderd_all, aes(x=Gene.name, y=n))+
+  scale_x_discrete(guide = guide_axis(n.dodge = 5)) +
+              geom_bar(stat='identity')
+```
+
+## chapuy
+```{r}
+chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//NIHMS1030203-supplement-Table_S3.csv", skip = 2, header = FALSE)
+#data <- read.table("data.txt", skip = 2, header = FALSE)
+#unique(chapuy)
+
+newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
+colnames(chapuy) <- newheaders
+
+chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
+
+chapuyRUMC_all <- generics::intersect(chapuy_CCG$gene, genesOrderd_all$Gene.name)  # Apply intersect function
+chapuyRUMC_all
+
+chapuy_RUMC_genes_overlap_all <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_all))
+
+```
+
+# Relapse
+
+```{r}
+#genenames <- Case1_diag %>% select("Gene name")
+#genenames <- read.table("/home//sanne//bioinf//afstuderen//DATA//diag_GeneNames.csv", header = TRUE)
+genenames_r1 <- read.delim("//home//sanne//bioinf//afstuderen//DATA//RUMC//r1_GeneNames.csv")
+#unique(genenames_r1)
+#table(genenames['Gene.name'])
+genesOrderd_r1 <- genenames_r1 %>% count(Gene.name)
+genesOrderd_r1 <- genesOrderd_r1 %>% arrange(desc(n))
+class(genesOrderd_r1)
+library(ggplot2)
+library(dplyr)
+ggplot(genesOrderd_r1, aes(x=Gene.name, y=n))+
+  scale_x_discrete(guide = guide_axis(n.dodge = 5)) +
+              geom_bar(stat='identity')
+```
+
+## chapuy
+```{r}
+chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//NIHMS1030203-supplement-Table_S3.csv", skip = 2, header = FALSE)
+#data <- read.table("data.txt", skip = 2, header = FALSE)
+#unique(chapuy)
+
+newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
+colnames(chapuy) <- newheaders
+
+chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
+
+chapuyRUMC_r1 <- generics::intersect(chapuy_CCG$gene, genesOrderd_r1$Gene.name)  # Apply intersect function
+chapuyRUMC_all
+
+chapuy_RUMC_genes_overlap_r1 <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_r1))
+
+```
+
+## Schmitz
+```{r}
+Schmitz <- read.delim("//home//sanne//bioinf//afstuderen//DATA//Schmitz//GeneticPredictors.csv", header = TRUE)
+#data <- read.table("data.txt", skip = 2, header = FALSE)
+#unique(Schmitz)
+SchmitzRUMC_r1 <- generics::intersect(Schmitz$Gene.symbol, genesOrderd_r1$Gene.name)  # Apply intersect function
+SchmitzRUMC_r1
+
+Schmitz_RUMC_genes_overlap_r1 <- Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC_r1))
+```
+
+## RUMC relapse vs diagnose. In diagnosis not in relapse
+```{r}
+R1_DIAG <- generics::setdiff(genesOrderd$Gene.name, genesOrderd_r1$Gene.name)  # Apply
+R1_DIAG
+
+In_Diag_not_Relapse <- genesOrderd %>% filter_all(any_vars(. %in% R1_DIAG))
+
+```
+
+## RUMC relapse vs diagnose. In Relapse not in diagnosis
+```{r}
+Diag_R1 <- generics::setdiff(genesOrderd_r1$Gene.name, genesOrderd$Gene.name)  # Apply
+Diag_R1
+
+In_Relapse_not_Diag <- genesOrderd_r1 %>% filter_all(any_vars(. %in% Diag_R1))
+
+```
+
+
+
+
+
+## chapuy all
+```{r}
+# chapuy_all <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//table3_A_chapuy.csv", skip = 2, header = FALSE)
+# #data <- read.table("data.txt", skip = 2, header = FALSE)
+# #unique(chapuy)
+# 
+# newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
+# colnames(chapuy_all) <- newheaders
+# 
+# 
+# chapuyRUMCALL <- generics::intersect(chapuy_all$gene, genesOrderdg$Gene.name)  # Apply intersect function
+# chapuyRUMCALL
+# 
+# # chapuy_RUMC_genes_overlap_r1 <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_r1))
+
+```
