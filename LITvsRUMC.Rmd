@@ -1,11 +1,13 @@
 ---
-title: "DLBCL madeleine data"
+title: "Lit vs RUMC data"
 author: "Sanne Post"
 date: "3/2/2022"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
+## load in library's and packages
+
 library("readxl")
 library(tidyr)
 library(dplyr)
@@ -13,239 +15,364 @@ library(arsenal)
 library(knitr)
 library(VennDiagram)
 library(stringr)
-
+library("writexl")
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-## load in data
-
-```{r}
-# Case1_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 1)
-# Case2_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 2)
-# Case3_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 3)
-# Case6_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 4)
-# Case8_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 5)
-# Case19_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 6)
-# Case30_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 7)
-# Case32_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 8)
-# Case47_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 9)
-# Case51_diag <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 10)
-# 
-# Case1_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 11)
-# Case2_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 12)
-# Case3_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 13)
-# Case6_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 14)
-# Case8_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 15)
-# Case19_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 16)
-# Case30_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 17)
-# Case32_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 18)
-# Case47_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 19)
-# Case51_r1 <- read_excel("//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx", sheet = 20)
-
-# genenames <- Case1_diag %>% select("Gene name")
-```
-
-## write csv
-
-```{r}
-# # write.csv(Case1_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case1_diag.csv" ,row.names = FALSE)
-# write.csv(Case1_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case1_diag.csv" ,row.names = FALSE)
-# write.csv(Case1_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case1_r1.csv" ,row.names = FALSE)
-# write.csv(Case19_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case19_diag.csv" ,row.names = FALSE)
-# write.csv(Case19_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case19_r1.csv" ,row.names = FALSE)
-# write.csv(Case2_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case2_diag.csv" ,row.names = FALSE)
-# write.csv(Case2_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case2_r1.csv" ,row.names = FALSE)
-# write.csv(Case3_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case3_diag.csv" ,row.names = FALSE)
-# write.csv(Case3_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case3_r1.csv" ,row.names = FALSE)
-# write.csv(Case30_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case30_diag.csv" ,row.names = FALSE)
-# write.csv(Case30_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case30_r1.csv" ,row.names = FALSE)
-# write.csv(Case32_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case32_diag.csv" ,row.names = FALSE)
-# write.csv(Case32_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case32_r1.csv" ,row.names = FALSE)
-# write.csv(Case47_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case47_diag.csv" ,row.names = FALSE)
-# write.csv(Case47_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case47_r1.csv" ,row.names = FALSE)
-# write.csv(Case51_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case51_diag.csv" ,row.names = FALSE)
-# write.csv(Case51_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case51_r1.csv" ,row.names = FALSE)
-# 
-# write.csv(Case6_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case6_diag.csv" ,row.names = FALSE)
-# write.csv(Case6_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case6_r1.csv" ,row.names = FALSE)
-# write.csv(Case8_diag,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case8_diag.csv" ,row.names = FALSE)
-# write.csv(Case8_r1,"//home//sanne//bioinf//afstuderen//DATA//RUMC//Case8_r1.csv" ,row.names = FALSE)
-# 
-
-```
-
-# gene names
-## Diagnose
-
-```{r}
-#genenames <- Case1_diag %>% select("Gene name")
-#genenames <- read.table("/home//sanne//bioinf//afstuderen//DATA//diag_GeneNames.csv", header = TRUE)
-genenames <- read.delim("//home//sanne//bioinf//afstuderen//DATA//RUMC//diag_GeneNames.csv")
-#unique(genenames)
-#table(genenames['Gene.name'])
-genesOrderd <- genenames %>% count(Gene.name)
-genesOrderd <- genesOrderd %>% arrange(desc(n))
-class(genesOrderd)
+library(xlsx)
 library(ggplot2)
-library(dplyr)
-ggplot(genesOrderd, aes(x=Gene.name, y=n))+
-  scale_x_discrete(guide = guide_axis(n.dodge = 5)) +
-              geom_bar(stat='identity')
-```
-## chapuy
-```{r}
-chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//NIHMS1030203-supplement-Table_S3.csv", skip = 2, header = FALSE)
-#data <- read.table("data.txt", skip = 2, header = FALSE)
-#unique(chapuy)
-
-newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
-colnames(chapuy) <- newheaders
-
-chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
-
-chapuyRUMC <- generics::intersect(chapuy_CCG$gene, genesOrderd$Gene.name)  # Apply intersect function
-chapuyRUMC
-
-chapuy_RUMC_genes_overlap <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC))
-
 ```
 
+Always run the library's first than the write excel, read excel and analysis to make sure the functions are in the environment
+
+## write excel
+```{r, include=FALSE}
+## reused from: https://stackoverflow.com/questions/46490452/handling-empty-data-frame-with-write-xlsx/47874836#47874836
+
+write.xlsx.custom <- function(x, file, sheetName="Sheet1",
+                       col.names=TRUE, row.names=TRUE, append=FALSE, showNA=TRUE)
+{
+    if (!is.data.frame(x))
+        x <- data.frame(x)    # just because the error message is too ugly
+
+    iOffset <- jOffset <- 0
+    if (col.names)
+        iOffset <- 1
+    if (row.names)
+        jOffset <- 1
+
+    if (append && file.exists(file)){
+        wb <- loadWorkbook(file)
+    } else {
+        ext <- gsub(".*\\.(.*)$", "\\1", basename(file))
+        wb  <- createWorkbook(type=ext)
+    }  
+    sheet <- createSheet(wb, sheetName)
+
+    noRows <- nrow(x) + iOffset
+    noCols <- ncol(x) + jOffset
+    if (col.names){
+        rows  <- createRow(sheet, 1)                  # create top row
+        cells <- createCell(rows, colIndex=1:noCols)  # create cells
+        mapply(setCellValue, cells[1,(1+jOffset):noCols], colnames(x))
+    }
+    if (row.names)             # add rownames to data x                   
+        x <- cbind(rownames=rownames(x), x)
+
+    if(nrow(x) > 0) {
+        colIndex <- seq_len(ncol(x))
+        rowIndex <- seq_len(nrow(x)) + iOffset
+
+        .write_block(wb, sheet, x, rowIndex, colIndex, showNA)
+    }
+    saveWorkbook(wb, file)
+
+    invisible()
+}
+
+.write_block <- function(wb, sheet, y, rowIndex=seq_len(nrow(y)),
+   colIndex=seq_len(ncol(y)), showNA=TRUE)
+{
+  rows  <- createRow(sheet, rowIndex)      # create rows
+  cells <- createCell(rows, colIndex)      # create cells
+
+  for (ic in seq_len(ncol(y)))
+    mapply(setCellValue, cells[seq_len(nrow(cells)), colIndex[ic]], y[,ic], FALSE, showNA)
+
+  # Date and POSIXct classes need to be formatted
+  indDT <- which(sapply(y, function(x) inherits(x, "Date")))
+  if (length(indDT) > 0) {
+    dateFormat <- CellStyle(wb) + DataFormat(getOption("xlsx.date.format"))
+    for (ic in indDT){
+      lapply(cells[seq_len(nrow(cells)),colIndex[ic]], setCellStyle, dateFormat)
+    }
+  }
+
+  indDT <- which(sapply(y, function(x) inherits(x, "POSIXct")))
+  if (length(indDT) > 0) {
+    datetimeFormat <- CellStyle(wb) + DataFormat(getOption("xlsx.datetime.format"))
+    for (ic in indDT){
+      lapply(cells[seq_len(nrow(cells)),colIndex[ic]], setCellStyle, datetimeFormat)
+    }
+  }
+
+}
+
+```
+
+## read excel
+
+```{r, include=FALSE}
+## reused from: https://stackoverflow.com/questions/12945687/read-all-worksheets-in-an-excel-workbook-into-an-r-list-with-data-frames/12945838#12945838
+library(readxl)
+read_excel_allsheets <- function(filename, tibble = FALSE) {
+  # I prefer straight data.frames
+  # but if you like tidyverse tibbles (the default with read_excel)
+  # then just pass tibble = TRUE
+  sheets <- readxl::excel_sheets(filename)
+  x <-
+    lapply(sheets, function(X)
+      readxl::read_excel(filename, sheet = X))
+  if (!tibble)
+    x <- lapply(x, as.data.frame)
+  names(x) <- sheets
+  x
+}
+## reused from: https://stackoverflow.com/questions/17499013/how-do-i-make-a-list-of-data-frames/24352576#24352576
+GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
+  DF_SELECTED <- DF_LIST[[ITEM_LOC]]
+  # DF_SELECTED <- tibble::as_tibble(DF_SELECTED)
+  return(DF_SELECTED)
+}
+
+```
+
+## locations
 ```{r}
+## Give the location of the .xlsx file you want to use
+EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"
+## Give the output location where the output files need to go. 
+## Remember the // at the end
+OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//LITvsDATA//NEW//"
+## Use the mysheets function to read the .xlsx file in as a large list
+mysheets <- read_excel_allsheets(EXCEL_location)
+## Read in the chapuy and scmitz data
 Schmitz <- read.delim("//home//sanne//bioinf//afstuderen//DATA//Schmitz//GeneticPredictors.csv", header = TRUE)
-#data <- read.table("data.txt", skip = 2, header = FALSE)
-#unique(Schmitz)
-SchmitzRUMC <- generics::intersect(Schmitz$Gene.symbol, genesOrderd$Gene.name)  # Apply intersect function
-SchmitzRUMC
-
-Schmitz_RUMC_genes_overlap <- Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC))
-```
-
-```{r}
-SchmitzChapuy <- generics::intersect(Schmitz$Gene.symbol, chapuy_CCG$gene)  # Apply intersect function
-#SchmitzChapuy
-Schmitz_Chapuy_genes_overlap <- Schmitz %>% filter_all(any_vars(. %in% SchmitzChapuy))
-Chapuy_Schmitz_genes_overlap <- chapuy_CCG %>% filter_all(any_vars(. %in% SchmitzChapuy))
+chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//NIHMS1030203-supplement-Table_S3.csv", skip = 2, header = FALSE)
+chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
 
 ```
 
-# Diagnose and relapse
-
+## Output
 ```{r}
-#genenames <- Case1_diag %>% select("Gene name")
-#genenames <- read.table("/home//sanne//bioinf//afstuderen//DATA//diag_GeneNames.csv", header = TRUE)
-genenames_all <- read.delim("//home//sanne//bioinf//afstuderen//DATA//RUMC//all_GeneNames.csv")
-#unique(genenames_all)
-#table(genenames['Gene.name'])
-genesOrderd_all <- genenames_all %>% count(Gene.name)
-genesOrderd_all <- genesOrderd_all %>% arrange(desc(n))
-class(genesOrderd_all)
-library(ggplot2)
-library(dplyr)
-ggplot(genesOrderd_all, aes(x=Gene.name, y=n))+
-  scale_x_discrete(guide = guide_axis(n.dodge = 5)) +
-              geom_bar(stat='identity')
+## write all the dataframes out in one .xlsx
+filenames <- paste0(OUTPUT_location, "LITvsRUMC.xlsx")
+  write.xlsx.custom(genesOrderd_all, file = filenames, sheetName =
+                      "genesOrderd_all", append = FALSE, row.names = FALSE)
+  write.xlsx.custom(genesOrderd_rel, file = filenames, sheetName =
+                      "genesOrderd_rel", append = TRUE,row.names = FALSE)
+  write.xlsx.custom(genesOrderd_diag, file = filenames, sheetName = 
+                      "genesOrderd_diag", append = TRUE, row.names = FALSE)
+  
+  write.xlsx.custom(chapuy_RUMC_genes_overlap_all, file = filenames, sheetName = 
+                      "chapuy_RUMC_genes_overlap_all", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(chapuy_RUMC_genes_overlap_diag, file = filenames, sheetName = 
+                      "chapuy_RUMC_genes_overlap_diag", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(chapuy_RUMC_genes_overlap_rel, file = filenames, sheetName =
+                      "chapuy_RUMC_genes_overlap_rel", append = TRUE,row.names = FALSE)
+  
+  write.xlsx.custom(Schmitz_RUMC_genes_overlap_all, file = filenames, sheetName = 
+                      "Schmitz_RUMC_genes_overlap_all", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(Schmitz_RUMC_genes_overlap_rel, file = filenames, sheetName = 
+                      "Schmitz_RUMC_genes_overlap_rel", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(Schmitz_RUMC_genes_overlap_diag, file = filenames, sheetName = 
+                      "Schmitz_RUMC_genes_overlap_diag", append = TRUE, row.names = FALSE)
+  
+  write.xlsx.custom(Schmitz_Chapuy_genes_overlap, file = filenames, sheetName = 
+                      "Schmitz_Chapuy_genes_overlap", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(Chapuy_Schmitz_genes_overlap, file = filenames, sheetName = 
+                      "Chapuy_Schmitz_genes_overlap", append = TRUE, row.names = FALSE)
+  
+  write.xlsx.custom(In_Diag_not_Relapse, file = filenames, sheetName = 
+                      "In_Diag_not_Relapse", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(In_Relapse_not_Diag, file = filenames, sheetName = 
+                      "In_Relapse_not_Diag", append = TRUE, row.names = FALSE)
+
+```
+
+# Gene names
+## Genes ordered
+```{r}
+## Extract all the Gene name columns of the data in the mysheets large list,
+## count and order these
+genenames_plot <- function(chars, mysheets) {
+  ## Initiate data frame in wich all the genes will end up
+  genenamesDF <- data.frame(matrix(ncol = 1, nrow = 0))
+  ## chars is used if only the rel of diag tabs need to be used in the analysis
+  chars <- chars
+  ## For every tab in mysheets check if the chars is in the tab name if it is in
+  ## the tab name extract all the gene names en save these in the genenamesDF
+  for (i in 1:length(mysheets)) {
+    if (str_detect(names(mysheets[i]), chars)) {
+      case <- GETDF_FROMLIST(mysheets, i)
+      summary(case)
+      case_genenames <- case %>% select(`Gene name`)
+      genenamesDF <- rbind(case_genenames, genenamesDF)
+    }
+  }
+  ## Count how many times the genes are mutated and order these descending
+  genesOrderd <- genenamesDF %>% count(`Gene name`)
+  genesOrderd <- genesOrderd %>% arrange(desc(n))
+  ## Return this data frame
+  return(genesOrderd)
+}
+
+genenames_per_case_plot <- function(chars, mysheets) {
+  ## Initiate data frame in wich all the genes will end up
+  genenamesDF <- data.frame(matrix(ncol = 1, nrow = 0))
+  ## chars is used if only the rel of diag tabs need to be used in the analysis
+  chars <- chars
+  ## For every tab in mysheets check if the chars is in the tab name if it is in
+  ## the tab name extract all the gene names en save these in the genenamesDF
+  for (i in 1:length(mysheets)) {
+    
+    if (str_detect(names(mysheets[i]), chars)) {
+      case <- GETDF_FROMLIST(mysheets, i)
+      case_genenames <- case %>% select(`Gene name`)
+      #print(case_genenames)
+      # case_genenames <- as.vector(as.matrix(case_genenames))
+      print(unique(case_genenames)%>% arrange(desc(`Gene name`)))
+      caseNamesUnique <- unique(case_genenames)
+      # ---------------------------------------------------------------------------- case_genenames <- unique(case_genenames)
+      # print(case_genenames)
+
+      genenamesDF <- rbind(caseNamesUnique, genenamesDF)
+    }
+  }
+  ## Count how many times the genes are mutated and order these descending
+  genesOrderd <- genenamesDF %>% count(`Gene name`)
+  genesOrderd <- genesOrderd %>% arrange(desc(n))
+  ## Return this data frame
+  return(genesOrderd)
+}
+
+genesOrderd_per_case_all <- genenames_per_case_plot("", mysheets)
+# top_n(genesOrderd_per_case_all, n = 20, n) %>%
+#   ggplot(., aes(x = reorder(`Gene name` ,-n), y = n)) +
+#   theme(axis.text.x = element_text(
+#     angle = 90,
+#     vjust = 0.5,
+#     hjust = 1
+#   )) +
+#   geom_bar(stat = 'identity') +
+#   xlab("Gene names") + ylab("Amount")
+# 
+# ## Get the genes of both diagnosis and relapse and plot these
+# genesOrderd_all <- genenames_plot("", mysheets)
+# top_n(genesOrderd_all, n = 20, n) %>%
+#   ggplot(., aes(x = reorder(`Gene name` ,-n), y = n)) +
+#   theme(axis.text.x = element_text(
+#     angle = 90,
+#     vjust = 0.5,
+#     hjust = 1
+#   )) +
+#   geom_bar(stat = 'identity') +
+#   xlab("Gene names") + ylab("Amount")
+# ## Get the genes of relapse and plot these
+# genesOrderd_rel <- genenames_plot("rel", mysheets)
+# top_n(genesOrderd_rel, n = 20, n) %>%
+#   ggplot(., aes(x = reorder(`Gene name` ,-n), y = n)) +
+#   theme(axis.text.x = element_text(
+#     angle = 90,
+#     vjust = 0.5,
+#     hjust = 1
+#   )) +
+#   geom_bar(stat = 'identity') +
+#   xlab("Gene names") + ylab("Amount")
+# ## Get the genes of diagnosis and plot these
+# genesOrderd_diag <- genenames_plot("diag", mysheets)
+# top_n(genesOrderd_diag, n = 20, n) %>%
+#   ggplot(., aes(x = reorder(`Gene name` ,-n), y = n)) +
+#   theme(axis.text.x = element_text(
+#     angle = 90,
+#     vjust = 0.5,
+#     hjust = 1
+#   )) +
+#   geom_bar(stat = 'identity') +
+#   xlab("Gene names") + ylab("Amount")
 ```
 
 ## chapuy
 ```{r}
-chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//NIHMS1030203-supplement-Table_S3.csv", skip = 2, header = FALSE)
-#data <- read.table("data.txt", skip = 2, header = FALSE)
-#unique(chapuy)
-
-newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
+# Add the headers to the chapuy data
+newheaders <-
+  c(
+    "gene",
+    "longname",
+    "codelen",
+    "nnei",
+    "nncd",
+    "nsil",
+    "nmis",
+    "nspl",
+    "nind",
+    "nnon",
+    "npat",
+    "nsite",
+    "pCV",
+    "pCL",
+    "pFN",
+    "p",
+    "q"
+  )
 colnames(chapuy) <- newheaders
 
-chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
+## Check overlap between chapuy and rumc diagnosis data
+chapuyRUMC_diag <-
+  generics::intersect(chapuy_CCG$gene, genesOrderd_diag$`Gene name`)  # Apply intersect function
+chapuyRUMC_diag
+chapuy_RUMC_genes_overlap_diag <-
+  chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_diag))
 
-chapuyRUMC_all <- generics::intersect(chapuy_CCG$gene, genesOrderd_all$Gene.name)  # Apply intersect function
+## Check overlap between chapuy and rumc data
+chapuyRUMC_all <-
+  generics::intersect(chapuy_CCG$gene, genesOrderd_all$`Gene name`)  # Apply intersect function
 chapuyRUMC_all
+chapuy_RUMC_genes_overlap_all <-
+  chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_all))
 
-chapuy_RUMC_genes_overlap_all <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_all))
-
-```
-
-# Relapse
-
-```{r}
-#genenames <- Case1_diag %>% select("Gene name")
-#genenames <- read.table("/home//sanne//bioinf//afstuderen//DATA//diag_GeneNames.csv", header = TRUE)
-genenames_r1 <- read.delim("//home//sanne//bioinf//afstuderen//DATA//RUMC//r1_GeneNames.csv")
-#unique(genenames_r1)
-#table(genenames['Gene.name'])
-genesOrderd_r1 <- genenames_r1 %>% count(Gene.name)
-genesOrderd_r1 <- genesOrderd_r1 %>% arrange(desc(n))
-class(genesOrderd_r1)
-library(ggplot2)
-library(dplyr)
-ggplot(genesOrderd_r1, aes(x=Gene.name, y=n))+
-  scale_x_discrete(guide = guide_axis(n.dodge = 5)) +
-              geom_bar(stat='identity')
-```
-
-## chapuy
-```{r}
-chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//NIHMS1030203-supplement-Table_S3.csv", skip = 2, header = FALSE)
-#data <- read.table("data.txt", skip = 2, header = FALSE)
-#unique(chapuy)
-
-newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
-colnames(chapuy) <- newheaders
-
-chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
-
-chapuyRUMC_r1 <- generics::intersect(chapuy_CCG$gene, genesOrderd_r1$Gene.name)  # Apply intersect function
-chapuyRUMC_all
-
-chapuy_RUMC_genes_overlap_r1 <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_r1))
-
+## Check overlap between chapuy and rumc relapse data
+chapuyRUMC_rel <-
+  generics::intersect(chapuy_CCG$gene, genesOrderd_rel$`Gene name`)  # Apply intersect function
+chapuyRUMC_rel
+chapuy_RUMC_genes_overlap_rel <-
+  chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_rel))
 ```
 
 ## Schmitz
 ```{r}
-Schmitz <- read.delim("//home//sanne//bioinf//afstuderen//DATA//Schmitz//GeneticPredictors.csv", header = TRUE)
-#data <- read.table("data.txt", skip = 2, header = FALSE)
-#unique(Schmitz)
-SchmitzRUMC_r1 <- generics::intersect(Schmitz$Gene.symbol, genesOrderd_r1$Gene.name)  # Apply intersect function
-SchmitzRUMC_r1
+## Check overlap between Schmitz and rumc data
+SchmitzRUMC_all <-
+  generics::intersect(Schmitz$Gene.symbol, genesOrderd_all$`Gene name`)  # Apply intersect function
+SchmitzRUMC_all
+Schmitz_RUMC_genes_overlap_all <-
+  Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC_all))
 
-Schmitz_RUMC_genes_overlap_r1 <- Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC_r1))
+## Check overlap between Schmitz and rumc diagnosis data
+SchmitzRUMC_diag <-
+  generics::intersect(Schmitz$Gene.symbol, genesOrderd_diag$`Gene name`)  # Apply intersect function
+SchmitzRUMC_diag
+Schmitz_RUMC_genes_overlap_diag <-
+  Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC_diag))
+
+## Check overlap between Schmitz and rumc relapse data
+SchmitzRUMC_rel <-
+  generics::intersect(Schmitz$Gene.symbol, genesOrderd_rel$`Gene name`)  # Apply intersect function
+SchmitzRUMC_rel
+Schmitz_RUMC_genes_overlap_rel <-
+  Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC_rel))
+```
+
+## Schmitz vs Chapuy
+```{r}
+## Check overlap between Schmitz and Chapuy relapse data
+SchmitzChapuy <- generics::intersect(Schmitz$Gene.symbol, chapuy_CCG$gene)  # Apply intersect function
+Schmitz_Chapuy_genes_overlap <- Schmitz %>% filter_all(any_vars(. %in% SchmitzChapuy))
+Chapuy_Schmitz_genes_overlap <- chapuy_CCG %>% filter_all(any_vars(. %in% SchmitzChapuy))
 ```
 
 ## RUMC relapse vs diagnose. In diagnosis not in relapse
 ```{r}
-R1_DIAG <- generics::setdiff(genesOrderd$Gene.name, genesOrderd_r1$Gene.name)  # Apply
+## Check overlap between RUMC diagnosis andrelapse data
+R1_DIAG <- generics::setdiff(genesOrderd_diag$`Gene name`, genesOrderd_rel$`Gene name`)  # Apply
 R1_DIAG
 
-In_Diag_not_Relapse <- genesOrderd %>% filter_all(any_vars(. %in% R1_DIAG))
-
+In_Diag_not_Relapse <- genesOrderd_all %>% filter_all(any_vars(. %in% R1_DIAG))
 ```
 
 ## RUMC relapse vs diagnose. In Relapse not in diagnosis
 ```{r}
-Diag_R1 <- generics::setdiff(genesOrderd_r1$Gene.name, genesOrderd$Gene.name)  # Apply
+## Check overlap between RUMC diagnosis andrelapse data
+Diag_R1 <- generics::setdiff(genesOrderd_rel$`Gene name`, genesOrderd_diag$`Gene name`)  # Apply
 Diag_R1
 
-In_Relapse_not_Diag <- genesOrderd_r1 %>% filter_all(any_vars(. %in% Diag_R1))
-
-```
-
-
-
-
-
-## chapuy all
-```{r}
-# chapuy_all <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//table3_A_chapuy.csv", skip = 2, header = FALSE)
-# #data <- read.table("data.txt", skip = 2, header = FALSE)
-# #unique(chapuy)
-# 
-# newheaders <- c("gene",	"longname",	"codelen",	"nnei",	"nncd",	"nsil",	"nmis",	"nspl",	"nind",	"nnon",	"npat",	"nsite",	"pCV",	"pCL",	"pFN",	"p",	"q")
-# colnames(chapuy_all) <- newheaders
-# 
-# 
-# chapuyRUMCALL <- generics::intersect(chapuy_all$gene, genesOrderdg$Gene.name)  # Apply intersect function
-# chapuyRUMCALL
-# 
-# # chapuy_RUMC_genes_overlap_r1 <- chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_r1))
-
+In_Relapse_not_Diag <- genesOrderd_rel %>% filter_all(any_vars(. %in% Diag_R1))
 ```
