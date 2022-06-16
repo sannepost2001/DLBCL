@@ -4,6 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
+## load in librarys and packages
 library("readxl")
 library(tidyr)
 library(dplyr)
@@ -16,8 +17,12 @@ knitr::opts_chunk$set(echo = TRUE)
 library(xlsx)
 ```
 
+Always run the library's first than the write excel, read excel and dynamiek to make sure the functions are in the environment
+
 ## write excel
-```{r}
+```{r, include=FALSE}
+## reused from: https://stackoverflow.com/questions/46490452/handling-empty-data-frame-with-write-xlsx/47874836#47874836
+
 write.xlsx.custom <- function(x, file, sheetName="Sheet1",
                        col.names=TRUE, row.names=TRUE, append=FALSE, showNA=TRUE)
 {
@@ -90,7 +95,9 @@ write.xlsx.custom <- function(x, file, sheetName="Sheet1",
 ```
 
 ## read excel
-```{r}
+
+```{r, include=FALSE}
+## reused from: https://stackoverflow.com/questions/12945687/read-all-worksheets-in-an-excel-workbook-into-an-r-list-with-data-frames/12945838#12945838
 library(readxl)
 read_excel_allsheets <- function(filename, tibble = FALSE) {
   # I prefer straight data.frames
@@ -105,12 +112,10 @@ read_excel_allsheets <- function(filename, tibble = FALSE) {
   names(x) <- sheets
   x
 }
-
-
-
+## reused from: https://stackoverflow.com/questions/17499013/how-do-i-make-a-list-of-data-frames/24352576#24352576
 GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
   DF_SELECTED <- DF_LIST[[ITEM_LOC]]
-  DF_SELECTED <- tbl_df(DF_SELECTED)
+  DF_SELECTED <- tibble::as_tibble(DF_SELECTED)
   return(DF_SELECTED)
 }
 
@@ -118,147 +123,237 @@ GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
 
 ## dynamiek
 ```{r}
-dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location) {
+## Function for the dynamic calculations
+dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location, Reads_all_Relapse1, Reads_all_Diagnosis) {
+  ## Read in new headers
   newheaders <-
     c("AFrelapse",
       "AFdiag" ,
       "Gene.name",
       "Start.position",
+      "Reads_all_Relapse1",
+      "Reads_all_Diagnosis",
       "CASE")
-  
+  ## Change header names
   colnames(AF_diag) <- newheaders
   colnames(AF_r1) <- newheaders
+  ## Change na in 0
   AF_diag[is.na(AF_diag)] <- 0
   AF_r1[is.na(AF_r1)] <- 0
-  #paste0("\\1", string)
+  ## Make case name
   caseDiag <- toString(paste0(Case , "_diag"))
   caseR1 <- toString(paste0(Case , "_r1"))
+  ## Add case name column
   AF_diag$CASE <- caseDiag
   AF_r1$CASE <- caseR1
   
-  times2 = data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(times2) <- newheaders
-  devides2 = data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(devides2) <- newheaders
-  between2 = data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(between2) <- newheaders
-  RECIDIEF_specifiek = data.frame(matrix(ncol = 5, nrow = 0))
+  ## Make all the data frames, make sure the ncol is equal to the amount of
+  ## columns this way there will always be a tab in the .xlsx file. And add all
+  ## the headers to the data frames
+  DIAGNOSE_specifiek = data.frame(matrix(ncol = 7, nrow = 0))
+  colnames(DIAGNOSE_specifiek) <- newheaders
+  DIAGNOSE_verrijkt = data.frame(matrix(ncol = 7, nrow = 0))
+  colnames(DIAGNOSE_verrijkt) <- newheaders
+  DIAGNOSE_afgenomen = data.frame(matrix(ncol = 7, nrow = 0))
+  colnames(DIAGNOSE_afgenomen) <- newheaders
+  DIAGNOSE_behouden = data.frame(matrix(ncol = 7, nrow = 0))
+  colnames(DIAGNOSE_behouden) <- newheaders
+  RECIDIEF_specifiek = data.frame(matrix(ncol = 7, nrow = 0))
   colnames(RECIDIEF_specifiek) <- newheaders
-  RECIDIEF_verrijkt = data.frame(matrix(ncol = 5, nrow = 0))
+  RECIDIEF_verrijkt = data.frame(matrix(ncol = 7, nrow = 0))
   colnames(RECIDIEF_verrijkt) <- newheaders
-
+  RECIDIEF_behouden = data.frame(matrix(ncol = 7, nrow = 0))
+  colnames(RECIDIEF_behouden) <- newheaders
+  RECIDIEF_afgenomen = data.frame(matrix(ncol = 7, nrow = 0))
+  colnames(RECIDIEF_afgenomen) <- newheaders
   
+  ## For every row in case data frame calculate the dynamic in relapse file
   for (i in 1:nrow(AF_r1)) {
+    ## Make variable row
     row <- AF_r1[i,]
-    AFdiagscore <- row$AFdiag
-    AFrelapsescore <- row$AFrelapse
-    AFdiagtime2 <- AFdiagscore * 2
-    RECIDIEF_specifiek_row = data.frame()
-    RECIDIEF_verrijkt_row = data.frame()
-    
-    if (AFdiagscore == 0) {
-      RECIDIEF_specifiek_row <- data.frame(row)
-      print("relapse specifiek")
-      
+    ## Check if the coverage is bigger than 20 in diagnosis and relapse 
+    if(row$Reads_all_Relapse1 > 20 & row$Reads_all_Diagnosis > 20 ){
+      ## Create variables and do calculations for "verrijkt"
+      AFdiagscore <- row$AFdiag
+      AFrelapsescore <- row$AFrelapse
+      AFdiagVerrijkt <- AFdiagscore * 2
+      AFdiagAfgenomen <- AFdiagscore / 2
+      ## Create data frame. Must be done in loop otherwise it won't be renewed
+      RECIDIEF_specifiek_row = data.frame()
+      RECIDIEF_verrijkt_row = data.frame()
+      RECIDIEF_behouden_row = data.frame()
+      RECIDIEF_afgenomen_row = data.frame()
+      ## If AFdiagscore equals zero the mutation is "recidief specifiek" 
+      if (AFdiagscore == 0) {
+        RECIDIEF_specifiekcase <- toString(paste0(Case , "_RECIDIEF_specifiek"))
+        row$DYNAMIEK <- RECIDIEF_specifiekcase
+        RECIDIEF_specifiek_row <- data.frame(row)
+      }
+      ## If AFdiagVerrijkt is smaller than AFrelapsescore the mutation is
+      ## "recidief verrijkt" 
+      else if (AFdiagVerrijkt < AFrelapsescore) {
+        RECIDIEF_verrijktcase <- toString(paste0(Case , "_RECIDIEF_verrijkt"))
+        row$DYNAMIEK <- RECIDIEF_verrijktcase
+        RECIDIEF_verrijkt_row <- data.frame(row)
+      }
+      else if (AFdiagAfgenomen > AFrelapsescore) {
+        RECIDIEF_afgenomencase <- toString(paste0(Case , "_RECIDIEF_afgenomen"))
+        row$DYNAMIEK <- RECIDIEF_afgenomencase
+        RECIDIEF_afgenomen_row <- data.frame(row)
+      }
+      else{
+        RECIDIEF_behoudencase <- toString(paste0(Case , "_RECIDIEF_behouden"))
+        row$DYNAMIEK <- RECIDIEF_behoudencase
+        RECIDIEF_behouden_row <- data.frame(row)
+      }
+      ## Add row data frames to the main data frames to save the calculations
+      RECIDIEF_specifiek <-
+        rbind(RECIDIEF_specifiek, RECIDIEF_specifiek_row)
+      RECIDIEF_verrijkt <-
+        rbind(RECIDIEF_verrijkt, RECIDIEF_verrijkt_row)
+       RECIDIEF_behouden <-
+        rbind(RECIDIEF_behouden, RECIDIEF_behouden_row)
+      RECIDIEF_afgenomen <-
+        rbind(RECIDIEF_afgenomen, RECIDIEF_afgenomen_row)
     }
-    else if (AFdiagtime2 < AFrelapsescore) {
-      print("times 2 relapse")
-      #AF_Case1_diag$dynamiek <- "times 2"
-      #(row)
-      RECIDIEF_verrijkt_row <- data.frame(row)
-    }
-    RECIDIEF_specifiek <-
-      rbind(RECIDIEF_specifiek, RECIDIEF_specifiek_row)
-    RECIDIEF_verrijkt <-
-      rbind(RECIDIEF_verrijkt, RECIDIEF_verrijkt_row)
-    
   }
-  # return(RECIDIEF_specifiek, RECIDIEF_verrijkt)
+  ## For every row in case data frame calculate the dynamic in diagnosis file
   for (i in 1:nrow(AF_diag)) {
-    row <- AF_diag[i, ]
-    AFdiagscore <- row$AFdiag
-    AFrelapsescore <- row$AFrelapse
-    AFdiagtime2 <- AFdiagscore * 2
-    AFdiagdevide2 <- AFdiagscore / 2
-    times2_row = data.frame()
-    devides2_row = data.frame()
-    between_row = data.frame()
-    
-    if (AFdiagtime2 < AFrelapsescore) {
-      print("times 2")
-      #AF_Case1_diag$dynamiek <- "times 2"
-      #(row)
-      times2_row <- data.frame(row)
+    ## Make variable row
+    row <- AF_diag[i, ]   
+    ## Check if the coverage is bigger than 20 in diagnosis and relapse 
+    if(row$Reads_all_Relapse1 > 20 & row$Reads_all_Diagnosis > 20 ){
+      ## Create variables and do calculations for "verrijkt" and "afgenomen"
+      AFdiagscore <- row$AFdiag
+      AFrelapsescore <- row$AFrelapse
+      AFdiagVerrijkt <- AFdiagscore * 2
+      AFdiagAfgenomen <- AFdiagscore / 2
+      ## Create data frame. Must be done in loop otherwise it won't be renewed
+      DIAGNOSE_specifiek_row = data.frame()
+      DIAGNOSE_verrijkt_row = data.frame()
+      DIAGNOSE_afgenomen_row = data.frame()
+      DIAGNOSE_behouden_row = data.frame()
+      ## If AFrelapsescore equals 0 the mutation is "DIAGNOSE_specifiek" 
+      if (AFrelapsescore == 0) {
+        DIAGNOSE_specifiekcase <- toString(paste0(Case , "_DIAGNOSE_specifiek"))
+        row$DYNAMIEK <- DIAGNOSE_specifiekcase
+        
+        DIAGNOSE_specifiek_row <- data.frame(row)
+      }
+      ## If AFdiagVerrijkt is smaller than AFrelapsescore the mutation is 
+      ## "verrijkt" 
+      else if (AFdiagVerrijkt < AFrelapsescore) {
+        DIAGNOSE_verrijktcase <- toString(paste0(Case , "_DIAGNOSE_verrijkt"))
+        row$DYNAMIEK <- DIAGNOSE_verrijktcase
+        DIAGNOSE_verrijkt_row <- data.frame(row)
+      }
+      ## If AFdiagAfgenomen is smaller than AFrelapsescore the mutation is 
+      ## "afgenomen"
+      else if (AFdiagAfgenomen > AFrelapsescore) {
+        DIAGNOSE_devide2case <- toString(paste0(Case , "_DIAGNOSE_afgenomen"))
+        row$DYNAMIEK <- DIAGNOSE_devide2case
+        DIAGNOSE_afgenomen_row <- data.frame(row)
+      }
+      ## If the mutation isn't sorted yet the mutation is "behouden"
+      else{
+        DIAGNOSE_behoudencase <- toString(paste0(Case , "_DIAGNOSE_behouden"))
+        row$DYNAMIEK <- DIAGNOSE_behoudencase
+        DIAGNOSE_behouden_row <- data.frame(row)
+      }
+      ## Add row data frames to the main data frames to save the calculations
+      DIAGNOSE_specifiek <- rbind(DIAGNOSE_specifiek, DIAGNOSE_specifiek_row)
+      DIAGNOSE_verrijkt <- rbind(DIAGNOSE_verrijkt, DIAGNOSE_verrijkt_row)
+      DIAGNOSE_afgenomen <- rbind(DIAGNOSE_afgenomen, DIAGNOSE_afgenomen_row)
+      DIAGNOSE_behouden <- rbind(DIAGNOSE_behouden, DIAGNOSE_behouden_row)
     }
-    else if (AFdiagdevide2 > AFrelapsescore) {
-      print("devide 2")
-      #AF_Case1_diag$dynamiek <- "times 2"
-      #(row)
-      devides2_row <- data.frame(row)
-    }
-    else{
-      #AF_Case1_diag$dynamiek <- "devide 2"
-      print("between devide and times")
-      between_row <- data.frame(row)
-      
-    }
-    times2 <- rbind(times2, times2_row)
-    devides2 <- rbind(devides2, devides2_row)
-    between2 <- rbind(between2, between_row)
   }
+  ## Write out one .xlsx file with all the data, every data frame in 
+  ## different tabs. Use the write.xlsx.custom 
+  filenames <- paste0(OUTPUT_location, Case, ".xlsx")
+  write.xlsx.custom(RECIDIEF_specifiek, file = filenames, sheetName =
+                      "RECIDIEF_specifiek", append = FALSE, row.names = FALSE)
+  write.xlsx.custom(RECIDIEF_verrijkt, file = filenames, sheetName =
+                      "RECIDIEF_verrijkt", append = TRUE,row.names = FALSE)
+  write.xlsx.custom(RECIDIEF_afgenomen, file = filenames, sheetName =
+                      "RECIDIEF_afgenomen", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(RECIDIEF_behouden, file = filenames, sheetName =
+                      "RECIDIEF_behouden", append = TRUE,row.names = FALSE)
+  write.xlsx.custom(DIAGNOSE_specifiek, file = filenames, sheetName =
+                      "DIAGNOSE_specifiek", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(DIAGNOSE_verrijkt, file = filenames, sheetName = 
+                      "DIAGNOSE_verrijkt", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(DIAGNOSE_afgenomen, file = filenames, sheetName = 
+                      "DIAGNOSE_afgenomen", append = TRUE, row.names = FALSE)
+  write.xlsx.custom(DIAGNOSE_behouden, file = filenames, sheetName = 
+                      "DIAGNOSE_behouden", append = TRUE, row.names = FALSE)
   
-  filenames <-
-    paste0(OUTPUT_location, Case, "v3.xlsx")
-  
-  write.xlsx.custom(RECIDIEF_specifiek, file = filenames, sheetName = 
-               "RECIDIEF_specifiek", append = FALSE, row.names = FALSE)
-  
-  write.xlsx.custom(RECIDIEF_verrijkt, file = filenames, sheetName = 
-               "RECIDIEF_verrijkt", append = TRUE,row.names = FALSE)
- 
-  write.xlsx.custom(times2, file = filenames, sheetName = "DIAGNOSE_verrijkt", 
-             append = TRUE, row.names = FALSE)
-  
-  write.xlsx.custom(devides2, file = filenames, sheetName = "DIAGNOSE_afgenomen",
-             append = TRUE, row.names = FALSE)
-  
-  write.xlsx.custom(between2, file = filenames, sheetName = "DIAGNOSE_behouden",
-             append = TRUE, row.names = FALSE)
+  ## Join all the data frames into one .csv file. 
+  dynamiek_all_cases <- rbind(DIAGNOSE_behouden, DIAGNOSE_verrijkt, DIAGNOSE_afgenomen, DIAGNOSE_specifiek, 
+                              RECIDIEF_verrijkt, RECIDIEF_specifiek, RECIDIEF_afgenomen, RECIDIEF_behouden)
+  filenames2 <- paste0(OUTPUT_location, Case, "all.csv")
+  write.csv(dynamiek_all_cases, filenames2, row.names = FALSE)
 }
 
 ```
 
 ## locations
 ```{r}
-EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx"
-OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//DYNAMIEK//"
-mysheets <-
-  read_excel_allsheets(EXCEL_location)
+## Give the location of the .xlsx file you want to use
+EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"
+## Give the output location where the output files need to go. 
+## Remember the // at the end
+OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//DymNewData//"
+## Use the mysheets function to read the .xlsx file in as a large list
+mysheets <- read_excel_allsheets(EXCEL_location)
+## Recalculation VAF scores because of tumor percentage remove column 2-4 they ar not needed
+tpRecalculationLocation <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//Tumorpercentage_correction_with3germlinefilters.xlsx"
+tpRecalculation <- read_excel(tpRecalculationLocation)
+tpRecalculation = subset(tpRecalculation, select = -c(2:4))
 ```
+
+## comments are the same for every case
 
 ## case 1
 ```{r}
-Case1_diag <- GETDF_FROMLIST(mysheets, "Case1_Diag")
-Case1_r1 <- GETDF_FROMLIST(mysheets, "Case1_R1")
+## Extract the case lists
+Case1_diag <- GETDF_FROMLIST(mysheets, "case1_diag")
+Case1_r1 <- GETDF_FROMLIST(mysheets, "cas1_rel")
 
+## Select the collums needed for the dynamiek_calculations function
 AF_Case1_diag <- Case1_diag %>%
-  select(AF_tumor_1B, AF_tumor_1A, `Gene name`, `Start position`)
+  select(AF_tumor_1B, AF_tumor_1A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case1_r1 <- Case1_r1 %>%
-  select(AF_tumor_1B, AF_tumor_1A, `Gene name`, `Start position`)
+  select(AF_tumor_1B, AF_tumor_1A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 
+## Recalculate the vaf scores with the tumor percentage
+n <- as.numeric(tpRecalculation[2,2])
+
+AF_Case1_diag$AF_tumor_1B <- AF_Case1_diag$AF_tumor_1B*n
+AF_Case1_r1$AF_tumor_1B <- AF_Case1_r1$AF_tumor_1B*n
+
+## Create case variable
 Case <- "Case1"
+## Start calculations by using the dynamiek_calculations function, needed 
+## columns are: AF_tumor_1B, AF_tumor_1A, `Gene name`, `Start position`, 
+## Reads_all_Relapse1, Reads_all_Diagnosis
 dynamiek_calculations(AF_Case1_diag, AF_Case1_r1, Case, OUTPUT_location)
+
 ```
 
 ## case 2
 ```{r}
-Case2_diag <- GETDF_FROMLIST(mysheets, "Case2_Diag")
-Case2_r1 <- GETDF_FROMLIST(mysheets, "Case2_R1")
+Case2_diag <- GETDF_FROMLIST(mysheets, "case2_diag")
+Case2_r1 <- GETDF_FROMLIST(mysheets, "case2_rel")
 
 AF_Case2_diag <- Case2_diag %>%
-  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case2_r1 <- Case2_r1 %>%
-  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[4,2])
+
+AF_Case2_diag$AF_Diagnosis...253 <- AF_Case2_diag$AF_Diagnosis...253*n
+AF_Case2_r1$AF_Diagnosis...253 <- AF_Case2_r1$AF_Diagnosis...253*n
 
 Case <- "Case2"
 dynamiek_calculations(AF_Case2_diag, AF_Case2_r1, Case, OUTPUT_location)
@@ -266,104 +361,171 @@ dynamiek_calculations(AF_Case2_diag, AF_Case2_r1, Case, OUTPUT_location)
 
 ## case 3
 ```{r}
-Case3_diag <- GETDF_FROMLIST(mysheets, "Case3_Diag")
-Case3_r1 <- GETDF_FROMLIST(mysheets, "Case3_R1")
+Case3_diag <- GETDF_FROMLIST(mysheets, "case3_diag")
+Case3_r1 <- GETDF_FROMLIST(mysheets, "case3_rel")
 
 AF_Case3_diag <- Case3_diag %>%
-  select(AF_tumor_3B, AF_tumor_3A, `Gene name`, `Start position`)
+  select(AF_tumor_3B, AF_tumor_3A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case3_r1 <- Case3_r1 %>%
-  select(AF_tumor_3B, AF_tumor_3A, `Gene name`, `Start position`)
+  select(AF_tumor_3B, AF_tumor_3A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[6,2])
+
+AF_Case3_diag$AF_tumor_3B <- AF_Case3_diag$AF_tumor_3B*n
+AF_Case3_r1$AF_tumor_3B <- AF_Case3_r1$AF_tumor_3B*n
+
 Case <- "Case3"
 dynamiek_calculations(AF_Case3_diag, AF_Case3_r1, Case, OUTPUT_location)
 ```
 
 ## case 19
 ```{r}
-Case19_diag <- GETDF_FROMLIST(mysheets, "Case19_Diag")
-Case19_r1 <- GETDF_FROMLIST(mysheets, "Case19_R1")
+Case19_diag <- GETDF_FROMLIST(mysheets, "case19_diag")
+Case19_r1 <- GETDF_FROMLIST(mysheets, "case19_rel")
 
 AF_Case19_diag <- Case19_diag %>%
-  select(AF_tumor_19B, AF_tumor_19A, `Gene name`, `Start position`)
+  select(AF_tumor_19B, AF_tumor_19A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case19_r1 <- Case19_r1 %>%
-  select(AF_tumor_19B, AF_tumor_19A, `Gene name`, `Start position`)
+  select(AF_tumor_19B, AF_tumor_19A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[12,2])
+
+AF_Case19_diag$AF_tumor_19B <- AF_Case19_diag$AF_tumor_19B*n
+AF_Case19_r1$AF_tumor_19B <- AF_Case19_r1$AF_tumor_19B*n
+
 Case <- "Case19"
 dynamiek_calculations(AF_Case19_diag, AF_Case19_r1, Case, OUTPUT_location)
 ```
 
 ## case 30
 ```{r}
-Case30_diag <- GETDF_FROMLIST(mysheets, "Case30_Diag")
-Case30_r1 <- GETDF_FROMLIST(mysheets, "Case30_R1")
+Case30_diag <- GETDF_FROMLIST(mysheets, "case30_diag")
+Case30_r1 <- GETDF_FROMLIST(mysheets, "case30_rel")
 
 AF_Case30_diag <- Case30_diag %>%
-  select(AF_Relapse1...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+  select(AF_Relapse1...253, AF_Diagnosis...242, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case30_r1 <- Case30_r1 %>%
-  select(AF_Relapse1...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+  select(AF_Relapse1...253, AF_Diagnosis...242, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[16,2])
+
+AF_Case30_diag$AF_Relapse1...253 <- AF_Case30_diag$AF_Relapse1...253*n
+AF_Case30_r1$AF_Relapse1...253 <- AF_Case30_r1$AF_Relapse1...253*n
+
 Case <- "Case30"
 dynamiek_calculations(AF_Case30_diag, AF_Case30_r1, Case, OUTPUT_location)
 ```
 
 ## case 32
 ```{r}
-Case32_diag <- GETDF_FROMLIST(mysheets, "Case32_Diag")
-Case32_r1 <- GETDF_FROMLIST(mysheets, "Case32_R1")
+Case32_diag <- GETDF_FROMLIST(mysheets, "case32_diag")
+Case32_r1 <- GETDF_FROMLIST(mysheets, "case32_rel")
 
 AF_Case32_diag <- Case32_diag %>%
-  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case32_r1 <- Case32_r1 %>%
-  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`)
+  select(AF_Diagnosis...253, AF_Diagnosis...242, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[17,2])
+
+AF_Case32_diag$AF_Diagnosis...242 <- AF_Case32_diag$AF_Diagnosis...242*n
+AF_Case32_r1$AF_Diagnosis...242 <- AF_Case32_r1$AF_Diagnosis...242*n
+
 Case <- "Case32"
 dynamiek_calculations(AF_Case32_diag, AF_Case32_r1, Case, OUTPUT_location)
 ```
 
+## case 39
+```{r}
+Case39_diag <- GETDF_FROMLIST(mysheets, "case39_diag")
+Case39_r1 <- GETDF_FROMLIST(mysheets, "case39_rel")
+
+AF_Case39_diag <- Case39_diag %>%
+  select(AF_tumor_39B, AF_tumor_39A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+AF_Case39_r1 <- Case39_r1 %>%
+  select(AF_tumor_39B, AF_tumor_39A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[19,2])
+
+AF_Case39_diag$AF_tumor_39A <- AF_Case39_diag$AF_tumor_39A*n
+AF_Case39_r1$AF_tumor_39A <- AF_Case39_r1$AF_tumor_39A*n
+
+Case <- "Case39"
+dynamiek_calculations(AF_Case39_diag, AF_Case39_r1, Case, OUTPUT_location)
+```
+
 ## case 47
 ```{r}
-Case47_diag <- GETDF_FROMLIST(mysheets, "Case47_Diag")
-Case47_r1 <- GETDF_FROMLIST(mysheets, "Case47_R1")
+Case47_diag <- GETDF_FROMLIST(mysheets, "case47_diag")
+Case47_r1 <- GETDF_FROMLIST(mysheets, "case47_rel")
 
 AF_Case47_diag <- Case47_diag %>%
-  select(AF_tumor_47B, AF_tumor_47A, `Gene name`, `Start position`)
+  select(AF_tumor_47B, AF_tumor_47A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case47_r1 <- Case47_r1 %>%
-  select(AF_tumor_47B, AF_tumor_47A, `Gene name`, `Start position`)
+  select(AF_tumor_47B, AF_tumor_47A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[22,2])
+
+AF_Case47_diag$AF_tumor_47B <- AF_Case47_diag$AF_tumor_47B*n
+AF_Case47_r1$AF_tumor_47B <- AF_Case47_r1$AF_tumor_47B*n
+
 Case <- "Case47"
 dynamiek_calculations(AF_Case47_diag, AF_Case47_r1, Case, OUTPUT_location)
 ```
 
 ## case 51
 ```{r}
-Case51_diag <- GETDF_FROMLIST(mysheets, "Case51_Diag")
-Case51_r1 <- GETDF_FROMLIST(mysheets, "Case51_R1")
+Case51_diag <- GETDF_FROMLIST(mysheets, "case51_diag")
+Case51_r1 <- GETDF_FROMLIST(mysheets, "case51_rel")
 
 AF_Case51_diag <- Case51_diag %>%
-  select(AF_tumor_51B, AF_tumor_51A, `Gene name`, `Start position`)
+  select(AF_tumor_51B, AF_tumor_51A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case51_r1 <- Case51_r1 %>%
-  select(AF_tumor_51B, AF_tumor_51A, `Gene name`, `Start position`)
+  select(AF_tumor_51B, AF_tumor_51A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[27,2])
+
+AF_Case51_diag$AF_tumor_51B <- AF_Case51_diag$AF_tumor_51B*n
+AF_Case51_r1$AF_tumor_51B <- AF_Case51_r1$AF_tumor_51B*n
+
 Case <- "Case51"
 dynamiek_calculations(AF_Case51_diag, AF_Case51_r1, Case, OUTPUT_location)
 ```
 
 ## case 6
 ```{r}
-Case6_diag <- GETDF_FROMLIST(mysheets, "Case6_Diag")
-Case6_r1 <- GETDF_FROMLIST(mysheets, "Case6_R1")
+Case6_diag <- GETDF_FROMLIST(mysheets, "case6_diag")
+Case6_r1 <- GETDF_FROMLIST(mysheets, "case6_rel")
 
 AF_Case6_diag <- Case6_diag %>%
-  select(AF_tumor_6D, AF_tumor_6A, `Gene name`, `Start position`)
+  select(AF_tumor_6D, AF_tumor_6A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case6_r1 <- Case6_r1 %>%
-  select(AF_tumor_6D, AF_tumor_6A, `Gene name`, `Start position`)
+  select(AF_tumor_6D, AF_tumor_6A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[7,2])
+
+AF_Case6_diag$AF_tumor_6A <- AF_Case6_diag$AF_tumor_6A*n
+AF_Case6_r1$AF_tumor_6A <- AF_Case6_r1$AF_tumor_6A*n
+
 Case <- "Case6"
 dynamiek_calculations(AF_Case6_diag, AF_Case6_r1, Case, OUTPUT_location)
 ```
 
 ## case 8
 ```{r}
-Case8_diag <- GETDF_FROMLIST(mysheets, "Case8_Diag")
-Case8_r1 <- GETDF_FROMLIST(mysheets, "Case8_R1")
+Case8_diag <- GETDF_FROMLIST(mysheets, "case8_diag")
+Case8_r1 <- GETDF_FROMLIST(mysheets, "case_8_rel")
 
 AF_Case8_diag <- Case8_diag %>%
-  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`)
+  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case8_r1 <- Case8_r1 %>%
-  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`)
+  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+
+n <- as.numeric(tpRecalculation[9,2])
+
+Case8_diag$AF_tumor_8A <- Case8_diag$AF_tumor_8A*n
+AF_Case8_r1$AF_tumor_8A <- AF_Case8_r1$AF_tumor_8A*n
+
 Case <- "Case8"
 dynamiek_calculations(AF_Case8_diag, AF_Case8_r1, Case, OUTPUT_location)
 ```
