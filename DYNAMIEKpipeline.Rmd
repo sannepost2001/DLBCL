@@ -124,7 +124,7 @@ GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
 ## dynamiek
 ```{r}
 ## Function for the dynamic calculations
-dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location, Reads_all_Relapse1, Reads_all_Diagnosis) {
+dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location){#, Reads_all_Relapse1, Reads_all_Diagnosis) {
   ## Read in new headers
   newheaders <-
     c("AFrelapse",
@@ -137,6 +137,40 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location, Reads_a
   ## Change header names
   colnames(AF_diag) <- newheaders
   colnames(AF_r1) <- newheaders
+  ## Remove IG genes
+  AF_diag<-AF_diag[!grepl("IGHG2", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGHE", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGHA1", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGHG1", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGHG3", AF_diag$Gene.name),]
+  
+  AF_diag<-AF_diag[!grepl("IGHV", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGHD", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGHJ", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGHC", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGKV", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGKC", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGKJ", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGLV", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGLJ", AF_diag$Gene.name),]
+  AF_diag<-AF_diag[!grepl("IGLC", AF_diag$Gene.name),]
+  
+  AF_r1<-AF_r1[!grepl("IGHG2", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGHE", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGHA1", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGHG1", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGHG3", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGHV", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGHD", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGHJ", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGHC", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGKV", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGKC", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGKJ", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGLV", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGLJ", AF_r1$Gene.name),]
+  AF_r1<-AF_r1[!grepl("IGLC", AF_r1$Gene.name),]
+  
   ## Change na in 0
   AF_diag[is.na(AF_diag)] <- 0
   AF_r1[is.na(AF_r1)] <- 0
@@ -172,7 +206,7 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location, Reads_a
     ## Make variable row
     row <- AF_r1[i,]
     ## Check if the coverage is bigger than 20 in diagnosis and relapse 
-    if(row$Reads_all_Relapse1 > 20 & row$Reads_all_Diagnosis > 20 ){
+    #if(row$Reads_all_Relapse1 > 20 & row$Reads_all_Diagnosis > 20 ){
       ## Create variables and do calculations for "verrijkt"
       AFdiagscore <- row$AFdiag
       AFrelapsescore <- row$AFrelapse
@@ -215,14 +249,14 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location, Reads_a
         rbind(RECIDIEF_behouden, RECIDIEF_behouden_row)
       RECIDIEF_afgenomen <-
         rbind(RECIDIEF_afgenomen, RECIDIEF_afgenomen_row)
-    }
+    #}
   }
   ## For every row in case data frame calculate the dynamic in diagnosis file
   for (i in 1:nrow(AF_diag)) {
     ## Make variable row
     row <- AF_diag[i, ]   
     ## Check if the coverage is bigger than 20 in diagnosis and relapse 
-    if(row$Reads_all_Relapse1 > 20 & row$Reads_all_Diagnosis > 20 ){
+    #if(row$Reads_all_Relapse1 > 20 & row$Reads_all_Diagnosis > 20 ){
       ## Create variables and do calculations for "verrijkt" and "afgenomen"
       AFdiagscore <- row$AFdiag
       AFrelapsescore <- row$AFrelapse
@@ -265,7 +299,7 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location, Reads_a
       DIAGNOSE_verrijkt <- rbind(DIAGNOSE_verrijkt, DIAGNOSE_verrijkt_row)
       DIAGNOSE_afgenomen <- rbind(DIAGNOSE_afgenomen, DIAGNOSE_afgenomen_row)
       DIAGNOSE_behouden <- rbind(DIAGNOSE_behouden, DIAGNOSE_behouden_row)
-    }
+   # }
   }
   ## Write out one .xlsx file with all the data, every data frame in 
   ## different tabs. Use the write.xlsx.custom 
@@ -299,7 +333,7 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location, Reads_a
 ## locations
 ```{r}
 ## Give the location of the .xlsx file you want to use
-EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"
+EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//20062022_allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"
 ## Give the output location where the output files need to go. 
 ## Remember the // at the end
 OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//DymNewData//"
@@ -528,4 +562,103 @@ AF_Case8_r1$AF_tumor_8A <- AF_Case8_r1$AF_tumor_8A*n
 
 Case <- "Case8"
 dynamiek_calculations(AF_Case8_diag, AF_Case8_r1, Case, OUTPUT_location)
+```
+
+case  43, 45, 57 en 66
+
+## case 67
+```{r}
+Case67_diag <- GETDF_FROMLIST(mysheets, "case67_diag")
+Case67_r1 <- GETDF_FROMLIST(mysheets, "case67_rel")
+
+AF_Case67_diag <- Case67_diag %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+AF_Case67_r1 <- Case67_r1 %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+
+n <- as.numeric(tpRecalculation[35,2])
+
+AF_Case67_diag$AF_Relapse1 <- AF_Case67_diag$AF_Relapse1*n
+AF_Case67_r1$AF_Relapse1 <- AF_Case67_r1$AF_Relapse1*n
+
+Case <- "Case67"
+dynamiek_calculations(AF_Case67_diag, AF_Case67_r1, Case, OUTPUT_location)
+```
+
+## case 57
+```{r}
+Case57_diag <- GETDF_FROMLIST(mysheets, "case57_diag")
+Case57_r1 <- GETDF_FROMLIST(mysheets, "case57_rel")
+
+AF_Case57_diag <- Case57_diag %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+AF_Case57_r1 <- Case57_r1 %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+
+n <- as.numeric(tpRecalculation[35,2])
+
+AF_Case57_diag$AF_Relapse1 <- AF_Case57_diag$AF_Relapse1*n
+AF_Case57_r1$AF_Relapse1 <- AF_Case57_r1$AF_Relapse1*n
+
+Case <- "Case57"
+dynamiek_calculations(AF_Case57_diag, AF_Case57_r1, Case, OUTPUT_location)
+```
+
+
+## case 45
+```{r}
+Case45_diag <- GETDF_FROMLIST(mysheets, "case45_diag")
+Case45_r1 <- GETDF_FROMLIST(mysheets, "case45_rel")
+
+AF_Case45_diag <- Case45_diag %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+AF_Case45_r1 <- Case45_r1 %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+
+n <- as.numeric(tpRecalculation[32,2])
+
+AF_Case45_diag$AF_Diagnosis <- AF_Case45_diag$AF_Diagnosis*n
+AF_Case45_r1$AF_Diagnosis <- AF_Case45_r1$AF_Diagnosis*n
+
+Case <- "Case45"
+dynamiek_calculations(AF_Case45_diag, AF_Case45_r1, Case, OUTPUT_location)
+```
+
+
+## case 43
+```{r}
+Case43_diag <- GETDF_FROMLIST(mysheets, "case43_diag")
+Case43_r1 <- GETDF_FROMLIST(mysheets, "case43_rel")
+
+AF_Case43_diag <- Case43_diag %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+AF_Case43_r1 <- Case43_r1 %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+
+n <- as.numeric(tpRecalculation[30,2])
+
+AF_Case43_diag$AF_Diagnosis <- AF_Case43_diag$AF_Diagnosis*n
+AF_Case43_r1$AF_Diagnosis <- AF_Case43_r1$AF_Diagnosis*n
+
+Case <- "Case43"
+dynamiek_calculations(AF_Case43_diag, AF_Case43_r1, Case, OUTPUT_location)
+```
+
+## case 38
+```{r}
+Case38_diag <- GETDF_FROMLIST(mysheets, "case38_diag")
+Case38_r1 <- GETDF_FROMLIST(mysheets, "case38_rel")
+
+AF_Case38_diag <- Case38_diag %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+AF_Case38_r1 <- Case38_r1 %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+
+n <- as.numeric(tpRecalculation[28,2])
+
+AF_Case38_diag$AF_Diagnosis <- AF_Case38_diag$AF_Diagnosis*n
+AF_Case38_r1$AF_Diagnosis <- AF_Case38_r1$AF_Diagnosis*n
+
+Case <- "Case38"
+dynamiek_calculations(AF_Case38_diag, AF_Case38_r1, Case, OUTPUT_location)
 ```

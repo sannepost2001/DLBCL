@@ -138,7 +138,8 @@ mysheets <- read_excel_allsheets(EXCEL_location)
 Schmitz <- read.delim("//home//sanne//bioinf//afstuderen//DATA//Schmitz//GeneticPredictors.csv", header = TRUE)
 chapuy <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//NIHMS1030203-supplement-Table_S3.csv", skip = 2, header = FALSE)
 chapuy_CCG <- read.delim("//home//sanne//bioinf//afstuderen//DATA//chapuy//CCG_Chapuy.csv")
-
+chapuy_CCG_percentage <- chapuy_CCG
+chapuy_CCG_percentage$percentage <- (chapuy_CCG_percentage$npat/304)*100
 ```
 
 ## Output
@@ -149,41 +150,42 @@ filenames <- paste0(OUTPUT_location, "LITvsRUMC.xlsx")
                       "genesOrderd_all", append = FALSE, row.names = FALSE)
   write.xlsx.custom(genesOrderd_rel, file = filenames, sheetName =
                       "genesOrderd_rel", append = TRUE,row.names = FALSE)
-  write.xlsx.custom(genesOrderd_diag, file = filenames, sheetName = 
+  write.xlsx.custom(genesOrderd_diag, file = filenames, sheetName =
                       "genesOrderd_diag", append = TRUE, row.names = FALSE)
-  
-  write.xlsx.custom(chapuy_RUMC_genes_overlap_all, file = filenames, sheetName = 
+
+  write.xlsx.custom(chapuy_RUMC_genes_overlap_all, file = filenames, sheetName =
                       "chapuy_RUMC_genes_overlap_all", append = TRUE, row.names = FALSE)
-  write.xlsx.custom(chapuy_RUMC_genes_overlap_diag, file = filenames, sheetName = 
+  write.xlsx.custom(chapuy_RUMC_genes_overlap_diag, file = filenames, sheetName =
                       "chapuy_RUMC_genes_overlap_diag", append = TRUE, row.names = FALSE)
   write.xlsx.custom(chapuy_RUMC_genes_overlap_rel, file = filenames, sheetName =
                       "chapuy_RUMC_genes_overlap_rel", append = TRUE,row.names = FALSE)
-  
-  write.xlsx.custom(Schmitz_RUMC_genes_overlap_all, file = filenames, sheetName = 
+
+  write.xlsx.custom(Schmitz_RUMC_genes_overlap_all, file = filenames, sheetName =
                       "Schmitz_RUMC_genes_overlap_all", append = TRUE, row.names = FALSE)
-  write.xlsx.custom(Schmitz_RUMC_genes_overlap_rel, file = filenames, sheetName = 
+  write.xlsx.custom(Schmitz_RUMC_genes_overlap_rel, file = filenames, sheetName =
                       "Schmitz_RUMC_genes_overlap_rel", append = TRUE, row.names = FALSE)
-  write.xlsx.custom(Schmitz_RUMC_genes_overlap_diag, file = filenames, sheetName = 
+  write.xlsx.custom(Schmitz_RUMC_genes_overlap_diag, file = filenames, sheetName =
                       "Schmitz_RUMC_genes_overlap_diag", append = TRUE, row.names = FALSE)
-  
-  write.xlsx.custom(Schmitz_Chapuy_genes_overlap, file = filenames, sheetName = 
+
+  write.xlsx.custom(Schmitz_Chapuy_genes_overlap, file = filenames, sheetName =
                       "Schmitz_Chapuy_genes_overlap", append = TRUE, row.names = FALSE)
-  write.xlsx.custom(Chapuy_Schmitz_genes_overlap, file = filenames, sheetName = 
+  write.xlsx.custom(Chapuy_Schmitz_genes_overlap, file = filenames, sheetName =
                       "Chapuy_Schmitz_genes_overlap", append = TRUE, row.names = FALSE)
-  
-  write.xlsx.custom(In_Diag_not_Relapse, file = filenames, sheetName = 
+
+  write.xlsx.custom(In_Diag_not_Relapse, file = filenames, sheetName =
                       "In_Diag_not_Relapse", append = TRUE, row.names = FALSE)
-  write.xlsx.custom(In_Relapse_not_Diag, file = filenames, sheetName = 
+  write.xlsx.custom(In_Relapse_not_Diag, file = filenames, sheetName =
                       "In_Relapse_not_Diag", append = TRUE, row.names = FALSE)
 
 ```
+
 
 # Gene names
 ## Genes ordered
 ```{r}
 ## Extract all the Gene name columns of the data in the mysheets large list,
 ## count and order these
-genenames_plot <- function(chars, mysheets) {
+genenames_per_case_plot <- function(chars, mysheets, amountcases) {
   ## Initiate data frame in wich all the genes will end up
   genenamesDF <- data.frame(matrix(ncol = 1, nrow = 0))
   ## chars is used if only the rel of diag tabs need to be used in the analysis
@@ -191,93 +193,63 @@ genenames_plot <- function(chars, mysheets) {
   ## For every tab in mysheets check if the chars is in the tab name if it is in
   ## the tab name extract all the gene names en save these in the genenamesDF
   for (i in 1:length(mysheets)) {
-    if (str_detect(names(mysheets[i]), chars)) {
-      case <- GETDF_FROMLIST(mysheets, i)
-      summary(case)
-      case_genenames <- case %>% select(`Gene name`)
-      genenamesDF <- rbind(case_genenames, genenamesDF)
-    }
-  }
-  ## Count how many times the genes are mutated and order these descending
-  genesOrderd <- genenamesDF %>% count(`Gene name`)
-  genesOrderd <- genesOrderd %>% arrange(desc(n))
-  ## Return this data frame
-  return(genesOrderd)
-}
-
-genenames_per_case_plot <- function(chars, mysheets) {
-  ## Initiate data frame in wich all the genes will end up
-  genenamesDF <- data.frame(matrix(ncol = 1, nrow = 0))
-  ## chars is used if only the rel of diag tabs need to be used in the analysis
-  chars <- chars
-  ## For every tab in mysheets check if the chars is in the tab name if it is in
-  ## the tab name extract all the gene names en save these in the genenamesDF
-  for (i in 1:length(mysheets)) {
-    
     if (str_detect(names(mysheets[i]), chars)) {
       case <- GETDF_FROMLIST(mysheets, i)
       case_genenames <- case %>% select(`Gene name`)
       #print(case_genenames)
-      # case_genenames <- as.vector(as.matrix(case_genenames))
-      print(unique(case_genenames)%>% arrange(desc(`Gene name`)))
       caseNamesUnique <- unique(case_genenames)
-      # ---------------------------------------------------------------------------- case_genenames <- unique(case_genenames)
-      # print(case_genenames)
-
       genenamesDF <- rbind(caseNamesUnique, genenamesDF)
     }
   }
   ## Count how many times the genes are mutated and order these descending
   genesOrderd <- genenamesDF %>% count(`Gene name`)
   genesOrderd <- genesOrderd %>% arrange(desc(n))
-  ## Return this data frame
-  return(genesOrderd)
-}
+  genesOrderdPercent <- genesOrderd
+  genesOrderdPercent$percentage <- (genesOrderdPercent$n/amountcases)*100
 
-genesOrderd_per_case_all <- genenames_per_case_plot("", mysheets)
-# top_n(genesOrderd_per_case_all, n = 20, n) %>%
-#   ggplot(., aes(x = reorder(`Gene name` ,-n), y = n)) +
-#   theme(axis.text.x = element_text(
-#     angle = 90,
-#     vjust = 0.5,
-#     hjust = 1
-#   )) +
-#   geom_bar(stat = 'identity') +
-#   xlab("Gene names") + ylab("Amount")
-# 
-# ## Get the genes of both diagnosis and relapse and plot these
-# genesOrderd_all <- genenames_plot("", mysheets)
-# top_n(genesOrderd_all, n = 20, n) %>%
-#   ggplot(., aes(x = reorder(`Gene name` ,-n), y = n)) +
-#   theme(axis.text.x = element_text(
-#     angle = 90,
-#     vjust = 0.5,
-#     hjust = 1
-#   )) +
-#   geom_bar(stat = 'identity') +
-#   xlab("Gene names") + ylab("Amount")
-# ## Get the genes of relapse and plot these
-# genesOrderd_rel <- genenames_plot("rel", mysheets)
-# top_n(genesOrderd_rel, n = 20, n) %>%
-#   ggplot(., aes(x = reorder(`Gene name` ,-n), y = n)) +
-#   theme(axis.text.x = element_text(
-#     angle = 90,
-#     vjust = 0.5,
-#     hjust = 1
-#   )) +
-#   geom_bar(stat = 'identity') +
-#   xlab("Gene names") + ylab("Amount")
-# ## Get the genes of diagnosis and plot these
-# genesOrderd_diag <- genenames_plot("diag", mysheets)
-# top_n(genesOrderd_diag, n = 20, n) %>%
-#   ggplot(., aes(x = reorder(`Gene name` ,-n), y = n)) +
-#   theme(axis.text.x = element_text(
-#     angle = 90,
-#     vjust = 0.5,
-#     hjust = 1
-#   )) +
-#   geom_bar(stat = 'identity') +
-#   xlab("Gene names") + ylab("Amount")
+  newheaders <- c("Gene name",	"n" , "percentage")
+  colnames(genesOrderdPercent) <- newheaders
+  ## Return this data frame
+  return(genesOrderdPercent)
+}
+plot <- function(data, amountviewed) {
+  head(data, n = amountviewed, n) %>%
+  ggplot(., aes(x = reorder(`Gene name` ,-percentage), y = percentage)) +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  geom_bar(stat = 'identity') +
+  xlab("Gene names") + ylab("Percentage")
+  }
+
+## Get the genes of both diagnosis and relapse and plot these
+genesOrderd_all <- genenames_per_case_plot("", mysheets, 11)
+plot(genesOrderd_all, 20)
+
+# Get the genes of relapse and plot these
+genesOrderd_rel <- genenames_per_case_plot("rel", mysheets, 11)
+head(genesOrderd_rel, n = 20, n) %>%
+  ggplot(., aes(x = reorder(`Gene name` ,-percentage), y = percentage)) +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  geom_bar(stat = 'identity') +
+  xlab("Gene names") + ylab("Percentage")
+## Get the genes of diagnosis and plot these
+genesOrderd_diag <- genenames_per_case_plot("diag", mysheets, 11)
+head(genesOrderd_diag, n = 20, n) %>%
+  ggplot(., aes(x = reorder(`Gene name` ,-percentage), y = percentage)) +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  geom_bar(stat = 'identity') +
+  xlab("Gene names") + ylab("Percentage")
 ```
 
 ## chapuy
@@ -304,27 +276,28 @@ newheaders <-
     "q"
   )
 colnames(chapuy) <- newheaders
-
+chapuy_CCG_percentage <- chapuy_CCG
+chapuy_CCG_percentage$percentage <- (chapuy_CCG_percentage$npat/304)*100
 ## Check overlap between chapuy and rumc diagnosis data
 chapuyRUMC_diag <-
   generics::intersect(chapuy_CCG$gene, genesOrderd_diag$`Gene name`)  # Apply intersect function
-chapuyRUMC_diag
+# chapuyRUMC_diag
 chapuy_RUMC_genes_overlap_diag <-
-  chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_diag))
+  chapuy_CCG_percentage %>% filter_all(any_vars(. %in% chapuyRUMC_diag))
 
 ## Check overlap between chapuy and rumc data
 chapuyRUMC_all <-
   generics::intersect(chapuy_CCG$gene, genesOrderd_all$`Gene name`)  # Apply intersect function
-chapuyRUMC_all
+# chapuyRUMC_all
 chapuy_RUMC_genes_overlap_all <-
-  chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_all))
+  chapuy_CCG_percentage %>% filter_all(any_vars(. %in% chapuyRUMC_all))
 
 ## Check overlap between chapuy and rumc relapse data
 chapuyRUMC_rel <-
   generics::intersect(chapuy_CCG$gene, genesOrderd_rel$`Gene name`)  # Apply intersect function
-chapuyRUMC_rel
+# chapuyRUMC_rel
 chapuy_RUMC_genes_overlap_rel <-
-  chapuy_CCG %>% filter_all(any_vars(. %in% chapuyRUMC_rel))
+  chapuy_CCG_percentage %>% filter_all(any_vars(. %in% chapuyRUMC_rel))
 ```
 
 ## Schmitz
@@ -332,21 +305,21 @@ chapuy_RUMC_genes_overlap_rel <-
 ## Check overlap between Schmitz and rumc data
 SchmitzRUMC_all <-
   generics::intersect(Schmitz$Gene.symbol, genesOrderd_all$`Gene name`)  # Apply intersect function
-SchmitzRUMC_all
+# SchmitzRUMC_all
 Schmitz_RUMC_genes_overlap_all <-
   Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC_all))
 
 ## Check overlap between Schmitz and rumc diagnosis data
 SchmitzRUMC_diag <-
   generics::intersect(Schmitz$Gene.symbol, genesOrderd_diag$`Gene name`)  # Apply intersect function
-SchmitzRUMC_diag
+# SchmitzRUMC_diag
 Schmitz_RUMC_genes_overlap_diag <-
   Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC_diag))
 
 ## Check overlap between Schmitz and rumc relapse data
 SchmitzRUMC_rel <-
   generics::intersect(Schmitz$Gene.symbol, genesOrderd_rel$`Gene name`)  # Apply intersect function
-SchmitzRUMC_rel
+# SchmitzRUMC_rel
 Schmitz_RUMC_genes_overlap_rel <-
   Schmitz %>% filter_all(any_vars(. %in% SchmitzRUMC_rel))
 ```
@@ -356,14 +329,14 @@ Schmitz_RUMC_genes_overlap_rel <-
 ## Check overlap between Schmitz and Chapuy relapse data
 SchmitzChapuy <- generics::intersect(Schmitz$Gene.symbol, chapuy_CCG$gene)  # Apply intersect function
 Schmitz_Chapuy_genes_overlap <- Schmitz %>% filter_all(any_vars(. %in% SchmitzChapuy))
-Chapuy_Schmitz_genes_overlap <- chapuy_CCG %>% filter_all(any_vars(. %in% SchmitzChapuy))
+Chapuy_Schmitz_genes_overlap <- chapuy_CCG_percentage %>% filter_all(any_vars(. %in% SchmitzChapuy))
 ```
 
 ## RUMC relapse vs diagnose. In diagnosis not in relapse
 ```{r}
 ## Check overlap between RUMC diagnosis andrelapse data
 R1_DIAG <- generics::setdiff(genesOrderd_diag$`Gene name`, genesOrderd_rel$`Gene name`)  # Apply
-R1_DIAG
+# R1_DIAG
 
 In_Diag_not_Relapse <- genesOrderd_all %>% filter_all(any_vars(. %in% R1_DIAG))
 ```
@@ -372,7 +345,7 @@ In_Diag_not_Relapse <- genesOrderd_all %>% filter_all(any_vars(. %in% R1_DIAG))
 ```{r}
 ## Check overlap between RUMC diagnosis andrelapse data
 Diag_R1 <- generics::setdiff(genesOrderd_rel$`Gene name`, genesOrderd_diag$`Gene name`)  # Apply
-Diag_R1
+# Diag_R1
 
 In_Relapse_not_Diag <- genesOrderd_rel %>% filter_all(any_vars(. %in% Diag_R1))
 ```
