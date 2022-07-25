@@ -4,6 +4,7 @@ output: html_notebook
 ---
 
 ```{r setup, include=FALSE}
+## load in librarys and packages
 library("readxl")
 library(tidyr)
 library(dplyr)
@@ -19,6 +20,7 @@ library(xlsx)
 
 ## read excel
 ```{r}
+## reused from: https://stackoverflow.com/questions/12945687/read-all-worksheets-in-an-excel-workbook-into-an-r-list-with-data-frames/12945838#12945838
 library(readxl)
 read_excel_allsheets <- function(filename, tibble = FALSE) {
   # I prefer straight data.frames
@@ -33,6 +35,7 @@ read_excel_allsheets <- function(filename, tibble = FALSE) {
   names(x) <- sheets
   x
 }
+## reused from: https://stackoverflow.com/questions/17499013/how-do-i-make-a-list-of-data-frames/24352576#24352576
 
 GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
   DF_SELECTED <- DF_LIST[[ITEM_LOC]]
@@ -44,10 +47,13 @@ GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
 
 ## locations
 ```{r}
-EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//Diagnosis_and_Relapse1_mutated_sheets.xlsx"
-OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//DYNAMIEK//lollipops//"
-mysheets <-
-  read_excel_allsheets(EXCEL_location)
+## Give the location of the .xlsx file you want to use
+EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"
+## Give the output location where the output files need to go. 
+## Remember the // at the end
+OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//lollipops//"
+## Use the mysheets function to read the .xlsx file in as a large list
+mysheets <- read_excel_allsheets(EXCEL_location)
 ```
 
 ## Lollipop code
@@ -89,44 +95,9 @@ lollipop_function <- function(Gene_name, mysheets, OUTPUT_location) {
 
 ```
 
-## dynamische genen
+## Get all the hits of this gene and get the right columns for the lollipops
 ```{r}
+## Use the lollipop_function function, give the gene name, the large list with 
+## excel data and the output location
 lollipop_myc <- lollipop_function("MYC", mysheets, OUTPUT_location)
-lollipop_BTG1 <- lollipop_function("BTG1", mysheets, OUTPUT_location)
-lollipop_MUC4 <- lollipop_function("MUC4", mysheets, OUTPUT_location)
-lollipop_MYD88 <- lollipop_function("MYD88", mysheets, OUTPUT_location)
-lollipop_PIM1 <- lollipop_function("PIM1", mysheets, OUTPUT_location)
-```
-
-## verrijkte genen
-```{r}
-lollipop_BTG1 <- lollipop_function("BTG1", mysheets, OUTPUT_location)
-lollipop_CD58 <- lollipop_function("CD58", mysheets, OUTPUT_location)
-lollipop_DDX3X <- lollipop_function("DDX3X", mysheets, OUTPUT_location)
-lollipop_DTX1 <- lollipop_function("DTX1", mysheets, OUTPUT_location)
-lollipop_H14 <- lollipop_function("H1-4", mysheets, OUTPUT_location)
-lollipop_H15 <- lollipop_function("H1-5", mysheets, OUTPUT_location)
-lollipop_IRF2BP2 <- lollipop_function("IRF2BP2", mysheets, OUTPUT_location)
-lollipop_LRP1B <- lollipop_function("LRP1B", mysheets, OUTPUT_location)
-lollipop_MUC4 <- lollipop_function("MUC4", mysheets, OUTPUT_location)
-lollipop_MYC <- lollipop_function("MYC", mysheets, OUTPUT_location)
-lollipop_NFKB2 <- lollipop_function("NFKB2", mysheets, OUTPUT_location)
-lollipop_PIM1 <- lollipop_function("PIM1", mysheets, OUTPUT_location)
-lollipop_SORCS3 <- lollipop_function("SORCS3", mysheets, OUTPUT_location)
-lollipop_SPEN <- lollipop_function("SPEN", mysheets, OUTPUT_location)
-lollipop_ZC3H12A <- lollipop_function("ZC3H12A", mysheets, OUTPUT_location)
-```
-
-## behouden genen
-```{r}
-lollipop_TEX13D <- lollipop_function("TEX13D", mysheets, OUTPUT_location)
-lollipop_SSU72P3 <- lollipop_function("SSU72P3", mysheets, OUTPUT_location)
-lollipop_SPEM3 <- lollipop_function("SPEM3", mysheets, OUTPUT_location)
-lollipop_SMIM5 <- lollipop_function("SMIM5", mysheets, OUTPUT_location)
-lollipop_MUC12 <- lollipop_function("MUC12", mysheets, OUTPUT_location)
-lollipop_ANAPC1 <- lollipop_function("ANAPC1", mysheets, OUTPUT_location)
-lollipop_C2orf16 <- lollipop_function("C2orf16", mysheets, OUTPUT_location)
-lollipop_GIPC3 <- lollipop_function("GIPC3", mysheets, OUTPUT_location)
-lollipop_MYC <- lollipop_function("MYC", mysheets, OUTPUT_location)
-lollipop_PIM1 <- lollipop_function("PIM1", mysheets, OUTPUT_location)
 ```

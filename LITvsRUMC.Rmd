@@ -128,7 +128,8 @@ GETDF_FROMLIST <- function(DF_LIST, ITEM_LOC) {
 ## locations
 ```{r}
 ## Give the location of the .xlsx file you want to use
-EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//20062022_allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"## Give the output location where the output files need to go. 
+EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//20062022_incll63_allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"
+## Give the output location where the output files need to go. 
 ## Remember the // at the end
 OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//LITvsDATA//NEW//"
 ## Use the mysheets function to read the .xlsx file in as a large list
@@ -253,7 +254,6 @@ genenames_per_case_plot <- function(chars, mysheets, amountcases) {
   genesOrderdPercent <- genesOrderd
   genesOrderdPercent$percentage <-
     (genesOrderdPercent$n / amountcases) * 100
-  
   newheaders <- c("Gene name",	"n" , "percentage")
   colnames(genesOrderdPercent) <- newheaders
   ## Return this data frame
@@ -272,11 +272,11 @@ plot <- function(data, amountviewed) {
   }
 
 ## Get the genes of both diagnosis and relapse and plot these
-genesOrderd_all <- genenames_per_case_plot("", mysheets, 16)
+genesOrderd_all <- genenames_per_case_plot("", mysheets, 17)
 plot(genesOrderd_all, 20)
 
 # Get the genes of relapse and plot these
-genesOrderd_rel <- genenames_per_case_plot("rel", mysheets, 16)
+genesOrderd_rel <- genenames_per_case_plot("rel", mysheets, 17)
 plot(genesOrderd_rel, 20) 
 
 ## Get the genes of diagnosis and plot these
@@ -366,7 +366,7 @@ Chapuy_Schmitz_genes_overlap <- chapuy_CCG_percentage %>% filter_all(any_vars(. 
 
 ## RUMC relapse vs diagnose. In diagnosis not in relapse
 ```{r}
-## Check overlap between RUMC diagnosis andrelapse data
+## Check overlap between RUMC diagnosis and relapse data
 R1_DIAG <- generics::setdiff(genesOrderd_diag$`Gene name`, genesOrderd_rel$`Gene name`)  # Apply
 # R1_DIAG
 

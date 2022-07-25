@@ -207,6 +207,7 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location){#, Read
     row <- AF_r1[i,]
     ## Check if the coverage is bigger than 20 in diagnosis and relapse 
     #if(row$Reads_all_Relapse1 > 20 & row$Reads_all_Diagnosis > 20 ){
+    if(row$AFdiag > 0.1 | row$AFrelapse > 0.1 ){
       ## Create variables and do calculations for "verrijkt"
       AFdiagscore <- row$AFdiag
       AFrelapsescore <- row$AFrelapse
@@ -250,12 +251,14 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location){#, Read
       RECIDIEF_afgenomen <-
         rbind(RECIDIEF_afgenomen, RECIDIEF_afgenomen_row)
     #}
+    }
   }
   ## For every row in case data frame calculate the dynamic in diagnosis file
   for (i in 1:nrow(AF_diag)) {
     ## Make variable row
     row <- AF_diag[i, ]   
     ## Check if the coverage is bigger than 20 in diagnosis and relapse 
+    if(row$AFdiag > 0.1 | row$AFrelapse > 0.1 ){
     #if(row$Reads_all_Relapse1 > 20 & row$Reads_all_Diagnosis > 20 ){
       ## Create variables and do calculations for "verrijkt" and "afgenomen"
       AFdiagscore <- row$AFdiag
@@ -300,6 +303,7 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location){#, Read
       DIAGNOSE_afgenomen <- rbind(DIAGNOSE_afgenomen, DIAGNOSE_afgenomen_row)
       DIAGNOSE_behouden <- rbind(DIAGNOSE_behouden, DIAGNOSE_behouden_row)
    # }
+    }
   }
   ## Write out one .xlsx file with all the data, every data frame in 
   ## different tabs. Use the write.xlsx.custom 
@@ -333,10 +337,10 @@ dynamiek_calculations <- function(AF_diag, AF_r1, Case, OUTPUT_location){#, Read
 ## locations
 ```{r}
 ## Give the location of the .xlsx file you want to use
-EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//20062022_allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"
+EXCEL_location <- "//home//sanne//bioinf//afstuderen//DATA//RUMC//20062022_incll63_allmutdiagr1_together_3germlinefiltersapplied_voorsanne.xlsx"
 ## Give the output location where the output files need to go. 
 ## Remember the // at the end
-OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//DymNewData//"
+OUTPUT_location <- "//home//sanne//bioinf//afstuderen//ANALYSIS//DymNewData//10perc//"
 ## Use the mysheets function to read the .xlsx file in as a large list
 mysheets <- read_excel_allsheets(EXCEL_location)
 ## Recalculation VAF scores because of tumor percentage remove column 2-4 they ar not needed
@@ -351,7 +355,12 @@ tpRecalculation = subset(tpRecalculation, select = -c(2:4))
 ```{r}
 ## Extract the case lists
 Case1_diag <- GETDF_FROMLIST(mysheets, "case1_diag")
-Case1_r1 <- GETDF_FROMLIST(mysheets, "cas1_rel")
+Case1_r1 <- GETDF_FROMLIST(mysheets, "case1_rel")
+
+testCase1_diag <- Case1_diag %>%  select(`Gene name`, `Protein Effect` , Hgvsg,  `Start position`)
+testCase1_r1 <- Case1_r1 %>%   select(`Gene name`, `Protein Effect` , Hgvsg,  `Start position`)
+
+# subset(testCase1_r1, testCase1_r1$`Start position` == 128750918 )
 
 ## Select the collums needed for the dynamiek_calculations function
 AF_Case1_diag <- Case1_diag %>%
@@ -370,7 +379,7 @@ Case <- "Case1"
 ## Start calculations by using the dynamiek_calculations function, needed 
 ## columns are: AF_tumor_1B, AF_tumor_1A, `Gene name`, `Start position`, 
 ## Reads_all_Relapse1, Reads_all_Diagnosis
-dynamiek_calculations(AF_Case1_diag, AF_Case1_r1, Case, OUTPUT_location)
+# dynamiek_calculations(AF_Case1_diag, AF_Case1_r1, Case, OUTPUT_location)
 
 ```
 
@@ -548,12 +557,12 @@ dynamiek_calculations(AF_Case6_diag, AF_Case6_r1, Case, OUTPUT_location)
 ## case 8
 ```{r}
 Case8_diag <- GETDF_FROMLIST(mysheets, "case8_diag")
-Case8_r1 <- GETDF_FROMLIST(mysheets, "case_8_rel")
+Case8_r1 <- GETDF_FROMLIST(mysheets, "case8_rel")
 
 AF_Case8_diag <- Case8_diag %>%
-  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`)#, Reads_all_Relapse1, Reads_all_Diagnosis)
 AF_Case8_r1 <- Case8_r1 %>%
-  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`, Reads_all_Relapse1, Reads_all_Diagnosis)
+  select(AF_tumor_8B, AF_tumor_8A, `Gene name`, `Start position`)#, Reads_all_Relapse1, Reads_all_Diagnosis)
 
 n <- as.numeric(tpRecalculation[9,2])
 
@@ -566,6 +575,25 @@ dynamiek_calculations(AF_Case8_diag, AF_Case8_r1, Case, OUTPUT_location)
 
 case  43, 45, 57 en 66
 
+## case 63
+```{r}
+Case63_diag <- GETDF_FROMLIST(mysheets, "case63_diag")
+Case63_r1 <- GETDF_FROMLIST(mysheets, "case63_rel")
+
+AF_Case63_diag <- Case63_diag %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+AF_Case63_r1 <- Case63_r1 %>%
+  select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
+
+n <- as.numeric(tpRecalculation[37,2])
+
+AF_Case63_diag$AF_Relapse1 <- AF_Case63_diag$AF_Relapse1*n
+AF_Case63_r1$AF_Relapse1 <- AF_Case63_r1$AF_Relapse1*n
+
+Case <- "Case63"
+dynamiek_calculations(AF_Case63_diag, AF_Case63_r1, Case, OUTPUT_location)
+```
+
 ## case 67
 ```{r}
 Case67_diag <- GETDF_FROMLIST(mysheets, "case67_diag")
@@ -576,7 +604,7 @@ AF_Case67_diag <- Case67_diag %>%
 AF_Case67_r1 <- Case67_r1 %>%
   select(AF_Relapse1, AF_Diagnosis, `Gene name`, `Start position`)
 
-n <- as.numeric(tpRecalculation[35,2])
+n <- as.numeric(tpRecalculation[41,2])
 
 AF_Case67_diag$AF_Relapse1 <- AF_Case67_diag$AF_Relapse1*n
 AF_Case67_r1$AF_Relapse1 <- AF_Case67_r1$AF_Relapse1*n
