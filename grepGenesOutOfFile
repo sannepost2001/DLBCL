@@ -1,0 +1,5 @@
+#grep all genes out of text file:
+#combine all .csv
+cat *csv > combined.csv
+#grep
+grep -wFf rushton/rushtonGenes.csv combined.csv > rushtonDataNew.csv
